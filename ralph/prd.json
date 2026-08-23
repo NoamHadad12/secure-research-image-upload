@@ -127,7 +127,7 @@
       ],
       "checks": ["Validation and object-key tests pass"],
       "commitMessage": "feat: validate upload metadata and generate scoped object keys",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

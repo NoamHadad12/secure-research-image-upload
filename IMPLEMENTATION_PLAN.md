@@ -25,7 +25,7 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 ## Phase 3 - Private object storage and upload flow
 
 - [x] R07: add MinIO adapter and enforce a private bucket.
-- [ ] R08: validate initiation metadata and generate safe object keys.
+- [x] R08: validate initiation metadata and generate safe object keys.
 - [ ] R09: persist pending records and issue presigned PUT URLs.
 - [ ] R10: confirm uploads using authorized rows and MinIO object stat.
 - [ ] R11: simulate queued/processing/completed/failed transitions.

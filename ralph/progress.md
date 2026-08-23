@@ -160,3 +160,19 @@ file records decisions and evidence that should survive a fresh context.
   Docker stack. The live `research-images` bucket exists and an anonymous
   request returned `403 AccessDenied`.
 - Next eligible story: R08.
+
+## 2026-08-23 - R08 upload-initiation metadata validation and object keys
+
+- Added a strict, route-independent Pydantic model for the metadata that will
+  later be accepted by upload initiation. It requires a trimmed bounded sample
+  ID, one of the documented demo classifications (`research`, `clinical`, or
+  `restricted`), and PNG/JPEG/WebP MIME types only.
+- Unknown input fields, including client-supplied `company_id` and `object_key`,
+  are forbidden before persistence or storage access.
+- Filenames are reduced to a conservative ASCII basename with a MIME-matching
+  extension and a bounded length. The backend-only key builder creates exactly
+  `uploads/{company_uuid}/{upload_uuid}/{safe_filename}` and refuses filename
+  path separators.
+- Added focused validation and key-layout tests. No route, database write, or
+  presigned URL was added; those belong to R09.
+- Next eligible story: R09.
