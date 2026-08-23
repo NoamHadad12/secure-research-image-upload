@@ -18,3 +18,18 @@ file records decisions and evidence that should survive a fresh context.
   separately; signed URL hostnames must not be rewritten.
 - Planning artifacts are complete. No product code has been implemented.
 - Next eligible story after Human Gate A: R01.
+
+## 2026-08-23 - R01 scaffold backend and frontend workspaces
+
+- Human Gate A was approved; implementation proceeds on the tracked `dev` branch.
+- Added a minimal FastAPI application package with exactly pinned runtime
+  dependencies.
+- Added a minimal React/TypeScript/Vite application with exact dependency
+  versions and a generated npm lockfile.
+- Upgraded Vite to 6.4.3 after `npm audit` identified advisories in the original
+  scaffold pin.
+- Verified the production frontend build, zero npm audit findings, JSON manifest
+  parsing, exact Python dependency pins, backend Python syntax, and ignored
+  frontend build artifacts.
+- No upload, database, object-storage, or authorization behavior was introduced.
+- Next eligible story: R02.

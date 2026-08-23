@@ -8,11 +8,11 @@ story state. Product implementation has not started.
 - [x] Analyze the assignment and repository state.
 - [x] Define product flow, architecture, security invariants, and stop condition.
 - [x] Split the build into atomic stories with acceptance criteria.
-- [ ] Human Gate A: review and approve this plan before product code.
+- [x] Human Gate A: review and approve this plan before product code.
 
 ## Phase 1 - Reproducible foundation
 
-- [ ] R01: scaffold backend and frontend workspaces.
+- [x] R01: scaffold backend and frontend workspaces.
 - [ ] R02: add environment contract, ignore rules, and Compose infrastructure.
 - [ ] R03: add FastAPI configuration, error shape, CORS, and health endpoint.
 

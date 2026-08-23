@@ -1,6 +1,6 @@
 {
   "project": "Secure Research Image Upload",
-  "branchName": "codex/secure-upload",
+  "branchName": "dev",
   "method": "supervised-ralph-loop",
   "stopCondition": "All stories pass, required tests and live tenant-isolation flow pass, README is complete, and clean-clone rehearsal succeeds.",
   "stories": [
@@ -16,7 +16,7 @@
       ],
       "checks": ["Dependency manifests parse", "Git diff contains no credentials"],
       "commitMessage": "chore: scaffold FastAPI and React applications",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
