@@ -97,3 +97,19 @@ file records decisions and evidence that should survive a fresh context.
   `BIGINT` in both places. A model test protects this contract.
 - Clarified timestamp documentation so it accurately distinguishes database
   initialization from SQLAlchemy's update-time SQL expression.
+
+## 2026-08-23 - R05 development identities and tenant context
+
+- Added deterministic development identities: Alice at Hospital A and Bob at
+  Hospital B. The backend seeds them after migrations at startup; a second seed
+  run preserves exactly two companies and two users.
+- Added a request dependency that resolves `X-User-ID` to the database user and
+  its company. It does not read a client-supplied company ID or any other tenant
+  hint.
+- Missing, malformed, and unknown development user IDs all return the same
+  generic 401 response.
+- Added isolated identity tests using an in-memory database, including a forged
+  `X-Company-ID` header that cannot change Alice's resolved Hospital A tenant.
+- Verified 15 pytest tests, Ruff, Alembic model/migration consistency, and a
+  live Compose startup with Alice and Bob present in PostgreSQL.
+- Next eligible story: R06.

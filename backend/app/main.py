@@ -1,24 +1,65 @@
 """FastAPI application entry point and public infrastructure boundary."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import Settings, get_settings
+from app.db import SessionFactory, create_session_factory
 from app.errors import error_response
+from app.identity import seed_development_identities
 from app.schemas import HealthResponse
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+@asynccontextmanager
+async def application_lifespan(app: FastAPI):
+    """Seed development users after migrations have made the schema available."""
+
+    session_factory: SessionFactory | None = app.state.session_factory
+    if session_factory is None:
+        raise RuntimeError("DATABASE_URL must be configured before starting the API")
+
+    with session_factory() as session:
+        try:
+            seed_development_identities(session)
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+    try:
+        yield
+    finally:
+        database_engine = getattr(app.state, "database_engine", None)
+        if database_engine is not None:
+            database_engine.dispose()
+
+
+def create_app(
+    settings: Settings | None = None,
+    *,
+    session_factory: SessionFactory | None = None,
+) -> FastAPI:
     """Create the API with validated configuration and safe error handlers."""
 
     resolved_settings = settings or get_settings()
     app = FastAPI(
         title=resolved_settings.app_name,
         version=resolved_settings.app_version,
+        lifespan=application_lifespan,
     )
     app.state.settings = resolved_settings
+    app.state.database_engine = None
+    app.state.session_factory = session_factory
+    if session_factory is None and resolved_settings.database_url:
+        database_engine, configured_session_factory = create_session_factory(
+            resolved_settings.required_database_url
+        )
+        app.state.database_engine = database_engine
+        app.state.session_factory = configured_session_factory
 
     app.add_middleware(
         CORSMiddleware,

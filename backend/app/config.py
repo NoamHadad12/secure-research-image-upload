@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     app_name: str = "Secure Research Image Upload API"
     app_version: str = "0.1.0"
     frontend_origin: AnyHttpUrl = "http://localhost:5173"
+    database_url: str | None = None
 
     @field_validator("frontend_origin")
     @classmethod
@@ -29,6 +30,14 @@ class Settings(BaseSettings):
         """Return the serialized origin in the form expected by CORS."""
 
         return str(self.frontend_origin).rstrip("/")
+
+    @property
+    def required_database_url(self) -> str:
+        """Return the database URL or fail clearly when persistence is required."""
+
+        if not self.database_url:
+            raise RuntimeError("DATABASE_URL must be configured before starting the API")
+        return self.database_url
 
 
 @lru_cache

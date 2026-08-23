@@ -80,7 +80,7 @@
       ],
       "checks": ["Identity dependency tests pass", "Seed can run twice"],
       "commitMessage": "feat: add seeded development users and tenant context",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
