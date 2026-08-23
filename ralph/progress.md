@@ -8,8 +8,8 @@ file records decisions and evidence that should survive a fresh context.
 - Repository started clean with one initial commit and only `README.md`.
 - Chosen stack: Dockerized Python 3.12/FastAPI backend, React/TypeScript frontend,
   PostgreSQL metadata, private MinIO object storage.
-- Local Python is 32-bit 3.8, so Docker avoids a host runtime upgrade and makes
-  reviewer setup reproducible.
+- Local 64-bit Python 3.12 and 3.13 are available. Docker still pins the
+  backend to Python 3.12 and makes reviewer setup reproducible.
 - Primary invariant: all upload-record access is scoped by authenticated company
   before any MinIO operation or presigned URL generation.
 - Foreign and nonexistent IDs intentionally share the same 404 response.
@@ -52,3 +52,21 @@ file records decisions and evidence that should survive a fresh context.
   PostgreSQL, running backend/frontend/MinIO services, frontend HTTP 200, and
   MinIO health HTTP 200.
 - Next eligible story: R03.
+
+## 2026-08-23 - R03 backend configuration and health boundary
+
+- Added Pydantic settings with validation and normalization for
+  `FRONTEND_ORIGIN`; CORS consumes only that validated origin.
+- Added an application factory so tests inject explicit settings instead of
+  depending on process-global state.
+- Added narrow CORS rules: only GET/POST, Content-Type/X-User-ID headers, no
+  credentialed cross-origin requests, and no wildcard origin.
+- Added stable `GET /health` response and a single safe error envelope for
+  validation, HTTP, and unexpected errors.
+- Added focused tests for settings validation, health, allowed/denied CORS, and
+  generic 404 responses.
+- Updated the backend image to include tests and set `PYTHONPATH=/app`, so the
+  documented `docker compose exec backend pytest` command runs successfully.
+- Verified Docker rebuild/container startup, seven pytest tests, Ruff, and live
+  HTTP health, CORS, and safe-error responses.
+- Next eligible story: R04.
