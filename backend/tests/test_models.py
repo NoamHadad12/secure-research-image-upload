@@ -22,6 +22,8 @@ def test_upload_metadata_schema_enforces_company_index_and_unique_object_key() -
     assert uploads.c.object_key.unique is True
     assert uploads.c.status.default.arg is UploadStatus.PENDING_UPLOAD
     assert str(uploads.c.status.server_default.arg) == "pending_upload"
+    assert uploads.c.status.type.enums == [status.value for status in UploadStatus]
+    assert uploads.c.status.type.validate_strings is True
     assert isinstance(uploads.c.size_bytes.type, BigInteger)
 
 

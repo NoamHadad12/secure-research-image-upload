@@ -82,7 +82,12 @@ class Upload(TimestampMixin, Base):
     )
     object_key: Mapped[str] = mapped_column(String(1024), unique=True, nullable=False)
     status: Mapped[UploadStatus] = mapped_column(
-        SqlEnum(UploadStatus, name="upload_status"),
+        SqlEnum(
+            UploadStatus,
+            name="upload_status",
+            values_callable=lambda enum_cls: [item.value for item in enum_cls],
+            validate_strings=True,
+        ),
         default=UploadStatus.PENDING_UPLOAD,
         server_default=UploadStatus.PENDING_UPLOAD.value,
         nullable=False,

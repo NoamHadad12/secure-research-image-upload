@@ -113,3 +113,14 @@ file records decisions and evidence that should survive a fresh context.
 - Verified 15 pytest tests, Ruff, Alembic model/migration consistency, and a
   live Compose startup with Alice and Bob present in PostgreSQL.
 - Next eligible story: R06.
+
+## 2026-08-23 - R04 PostgreSQL enum regression correction
+
+- Corrected the SQLAlchemy upload-status enum mapping to persist enum `.value`
+  strings such as `pending_upload`, matching the existing PostgreSQL enum
+  created by the initial migration.
+- Enabled string validation and added a live PostgreSQL regression test that
+  inserts a pending upload, verifies the stored lowercase enum value, and rolls
+  the test transaction back.
+- Verified 16 pytest tests, Ruff, and Alembic model/migration consistency.
+- Next eligible story remains R06.
