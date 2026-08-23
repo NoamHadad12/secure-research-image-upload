@@ -1,0 +1,329 @@
+{
+  "project": "Secure Research Image Upload",
+  "branchName": "codex/secure-upload",
+  "method": "supervised-ralph-loop",
+  "stopCondition": "All stories pass, required tests and live tenant-isolation flow pass, README is complete, and clean-clone rehearsal succeeds.",
+  "stories": [
+    {
+      "id": "R01",
+      "priority": 1,
+      "title": "Scaffold backend and frontend workspaces",
+      "dependsOn": [],
+      "acceptanceCriteria": [
+        "Backend and frontend directories have minimal runnable entry points",
+        "Python and Node dependencies are pinned in committed lock or dependency files",
+        "No business behavior or placeholder fake upload flow is added"
+      ],
+      "checks": ["Dependency manifests parse", "Git diff contains no credentials"],
+      "commitMessage": "chore: scaffold FastAPI and React applications",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R02",
+      "priority": 2,
+      "title": "Add environment and Docker Compose infrastructure",
+      "dependsOn": ["R01"],
+      "acceptanceCriteria": [
+        "Compose defines PostgreSQL, MinIO, backend, and frontend services",
+        ".env.example contains local placeholders and .env is ignored",
+        "Persistent database and object-storage data are ignored",
+        "MinIO CORS is restricted to the configured frontend origin"
+      ],
+      "checks": ["docker compose config succeeds", "No real credentials are tracked"],
+      "commitMessage": "chore: add local Docker Compose infrastructure",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R03",
+      "priority": 3,
+      "title": "Create backend configuration and health boundary",
+      "dependsOn": ["R02"],
+      "acceptanceCriteria": [
+        "FastAPI loads validated settings from environment",
+        "CORS permits only the configured frontend origin",
+        "GET /health returns a stable success response",
+        "Application errors use a consistent non-sensitive shape"
+      ],
+      "checks": ["Focused backend tests pass", "Backend container starts"],
+      "commitMessage": "feat: add validated backend configuration and health check",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R04",
+      "priority": 4,
+      "title": "Add metadata models and initial migration",
+      "dependsOn": ["R03"],
+      "acceptanceCriteria": [
+        "Company, user, and upload models match the architecture specification",
+        "Upload status includes pending_upload and all five required statuses",
+        "Upload company ID is indexed and object key is unique",
+        "Alembic upgrades a fresh PostgreSQL database"
+      ],
+      "checks": ["Migration applies to a fresh database", "Model tests pass"],
+      "commitMessage": "feat: add tenant upload metadata schema",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R05",
+      "priority": 5,
+      "title": "Seed development identities and resolve current user",
+      "dependsOn": ["R04"],
+      "acceptanceCriteria": [
+        "Hospital A, Hospital B, Alice, and Bob are seeded idempotently",
+        "X-User-ID resolves to a database user and company server-side",
+        "Missing or unknown development users are rejected",
+        "Client-provided company identity is never trusted"
+      ],
+      "checks": ["Identity dependency tests pass", "Seed can run twice"],
+      "commitMessage": "feat: add seeded development users and tenant context",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R06",
+      "priority": 6,
+      "title": "Implement tenant-scoped upload repository",
+      "dependsOn": ["R05"],
+      "acceptanceCriteria": [
+        "List query filters by company in SQL",
+        "Detail query filters by upload ID and company in SQL",
+        "Foreign and absent IDs produce identical not-found outcomes"
+      ],
+      "checks": ["Repository isolation tests pass"],
+      "commitMessage": "feat: enforce tenant-scoped upload persistence",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R07",
+      "priority": 7,
+      "title": "Create MinIO storage adapter and private bucket initialization",
+      "dependsOn": ["R03"],
+      "acceptanceCriteria": [
+        "Internal operations use the Docker endpoint",
+        "Presigned URLs use the browser-resolvable endpoint without URL rewriting",
+        "Bucket initialization is idempotent and removes anonymous policy",
+        "Storage interface can be replaced with a fake in tests"
+      ],
+      "checks": ["Storage unit tests pass", "Anonymous bucket request is denied in live stack"],
+      "commitMessage": "feat: add private MinIO storage adapter",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R08",
+      "priority": 8,
+      "title": "Validate upload initiation and generate safe object keys",
+      "dependsOn": ["R05", "R06"],
+      "acceptanceCriteria": [
+        "Required sample ID, filename, classification, and MIME are validated",
+        "Unknown fields including company_id and object_key are rejected",
+        "Filename is reduced to a safe bounded basename",
+        "Object key follows company/upload/safe-filename structure"
+      ],
+      "checks": ["Validation and object-key tests pass"],
+      "commitMessage": "feat: validate upload metadata and generate scoped object keys",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R09",
+      "priority": 9,
+      "title": "Initiate uploads with presigned PUT URLs",
+      "dependsOn": ["R07", "R08"],
+      "acceptanceCriteria": [
+        "POST /api/uploads/initiate derives company from current user",
+        "A pending_upload row is stored before success is returned",
+        "Response contains upload ID, five-minute PUT URL, and expiry but no credentials",
+        "Public response omits internal object key"
+      ],
+      "checks": ["Hospital A initiation test passes", "Invalid metadata tests pass"],
+      "commitMessage": "feat: issue short-lived presigned upload URLs",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R10",
+      "priority": 10,
+      "title": "Confirm uploads by verifying the expected MinIO object",
+      "dependsOn": ["R09"],
+      "acceptanceCriteria": [
+        "Confirmation authorizes by upload ID and company before storage access",
+        "Object key is read from the authorized database row",
+        "Missing, empty, or oversized object cannot become uploaded",
+        "Existing valid object stores size and ETag and becomes uploaded",
+        "Confirmation is safely idempotent"
+      ],
+      "checks": ["Confirmation success and failure tests pass", "Foreign confirmation never calls storage"],
+      "commitMessage": "feat: verify and confirm completed MinIO uploads",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R11",
+      "priority": 11,
+      "title": "Simulate processing state transitions",
+      "dependsOn": ["R10"],
+      "acceptanceCriteria": [
+        "Confirmed upload progresses through queued and processing to completed",
+        "Processor exception records failed",
+        "Background work creates its own database session",
+        "README limitation for non-durable local background work is captured in plan notes"
+      ],
+      "checks": ["Processor success and failure tests pass"],
+      "commitMessage": "feat: simulate research image processing lifecycle",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R12",
+      "priority": 12,
+      "title": "Expose tenant-scoped list and detail routes",
+      "dependsOn": ["R06", "R09"],
+      "acceptanceCriteria": [
+        "GET /api/uploads lists only the current company records",
+        "GET /api/uploads/{id} returns only an owned record",
+        "Foreign and random IDs return the same 404 body",
+        "Response schemas omit object key"
+      ],
+      "checks": ["Hospital A owner and Hospital B denial tests pass"],
+      "commitMessage": "feat: expose tenant-isolated upload records",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R13",
+      "priority": 13,
+      "title": "Authorize presigned download URLs",
+      "dependsOn": ["R07", "R10", "R12"],
+      "acceptanceCriteria": [
+        "Download route authorizes before calling storage",
+        "Only confirmed accessible objects receive a one-minute GET URL",
+        "Hospital B receives the generic 404 for Hospital A upload",
+        "Storage presigner is not called for denied requests"
+      ],
+      "checks": ["Owner download and cross-tenant denial tests pass"],
+      "commitMessage": "feat: authorize short-lived presigned downloads",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R14",
+      "priority": 14,
+      "title": "Complete API security regression suite",
+      "dependsOn": ["R10", "R12", "R13"],
+      "acceptanceCriteria": [
+        "All four assignment-mandated tests are explicit and named clearly",
+        "Foreign and nonexistent error equivalence is asserted",
+        "Arbitrary company and object-key attempts are asserted",
+        "Full backend test and lint suites pass"
+      ],
+      "checks": ["pytest passes", "ruff check passes"],
+      "commitMessage": "test: cover tenant isolation and upload validation",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R15",
+      "priority": 15,
+      "title": "Create typed frontend API client and user switch",
+      "dependsOn": ["R03", "R05", "R12"],
+      "acceptanceCriteria": [
+        "Typed API wrapper consistently sends selected X-User-ID",
+        "UI switches clearly between Alice and Bob",
+        "User switch refreshes records and clears stale tenant data",
+        "Backend remains the authorization authority"
+      ],
+      "checks": ["TypeScript build passes", "User switch verified in browser"],
+      "commitMessage": "feat: add typed API client and development user switch",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R16",
+      "priority": 16,
+      "title": "Implement direct browser upload and confirmation",
+      "dependsOn": ["R09", "R10", "R15"],
+      "acceptanceCriteria": [
+        "Controlled form collects required metadata and an image",
+        "Browser PUTs file bytes directly to the returned MinIO URL",
+        "Browser calls confirm only after successful PUT",
+        "Failure at initiate, PUT, or confirm is visible and retryable"
+      ],
+      "checks": ["Frontend build passes", "Real browser upload creates a MinIO object"],
+      "commitMessage": "feat: implement direct browser-to-MinIO upload flow",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R17",
+      "priority": 17,
+      "title": "Show uploads, statuses, downloads, and feedback",
+      "dependsOn": ["R11", "R13", "R15", "R16"],
+      "acceptanceCriteria": [
+        "Accessible uploads show required metadata and status",
+        "Polling stops or slows when no active states remain",
+        "Download requests a fresh authorized URL on click",
+        "Loading, empty, success, and error states are clear and accessible"
+      ],
+      "checks": ["Frontend build passes", "All UI states verified in browser"],
+      "commitMessage": "feat: display tenant uploads statuses and downloads",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R18",
+      "priority": 18,
+      "title": "Verify live cross-company end-to-end behavior",
+      "dependsOn": ["R14", "R17"],
+      "acceptanceCriteria": [
+        "Hospital A uploads, confirms, sees processing, and downloads an actual object",
+        "Hospital B list excludes Hospital A upload",
+        "Hospital B detail and download attempts return generic 404",
+        "Anonymous MinIO listing and direct object read fail",
+        "Evidence and exact commands are recorded in progress log"
+      ],
+      "checks": ["Live smoke flow passes", "docker compose ps is healthy"],
+      "commitMessage": "test: verify live MinIO tenant isolation flow",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R19",
+      "priority": 19,
+      "title": "Write complete assignment README",
+      "dependsOn": ["R18"],
+      "acceptanceCriteria": [
+        "README covers all 13 requested topics",
+        "Setup, test, upload, and download instructions match verified commands",
+        "Security tradeoffs, URL expiry, queue design, and production improvements are honest",
+        "AI tool/model usage and personally verified behavior are disclosed"
+      ],
+      "checks": ["Every assignment README item maps to a heading", "Commands are rerun from documentation"],
+      "commitMessage": "docs: explain setup architecture security and AI verification",
+      "passes": false,
+      "blocked": false
+    },
+    {
+      "id": "R20",
+      "priority": 20,
+      "title": "Perform final security and clean-clone rehearsal",
+      "dependsOn": ["R19"],
+      "acceptanceCriteria": [
+        "Full backend tests, lint, and frontend build pass",
+        "Git diff and tracked files contain no secret or generated runtime data",
+        "Clean clone starts using README instructions and .env.example",
+        "Commit history is coherent and every story is accounted for",
+        "Walkthrough script is rehearsed without unexplained code"
+      ],
+      "checks": ["All project checks pass", "Clean-clone smoke run passes", "Human Gate C approves submission"],
+      "commitMessage": "chore: complete submission readiness review",
+      "passes": false,
+      "blocked": false
+    }
+  ]
+}
