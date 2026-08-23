@@ -125,6 +125,12 @@ file records decisions and evidence that should survive a fresh context.
 - Verified 16 pytest tests, Ruff, and Alembic model/migration consistency.
 - Next eligible story remains R06.
 
+## 2026-08-23 - Documentation decision
+
+- R19 must include a maintained data-model diagram derived from the final schema.
+  It will show `companies`, `users`, and `uploads`, while making clear that image
+  bytes are stored privately in MinIO and only the object key is in PostgreSQL.
+
 ## 2026-08-23 - R06 tenant-scoped upload repository
 
 - Added a dedicated upload repository with explicit SQL filters for company-scoped
@@ -139,3 +145,18 @@ file records decisions and evidence that should survive a fresh context.
 - Verified the focused repository suite (4 tests), full backend suite (20 tests),
   and Ruff in the rebuilt Docker backend.
 - Next eligible story: R07.
+
+## 2026-08-23 - R07 private MinIO storage adapter
+
+- Added a backend-only MinIO adapter with distinct internal (`minio:9000`) and
+  browser-facing signing (`localhost:9000`) clients. The future presigner will
+  use the latter directly rather than rewrite an already-signed URL.
+- Backend startup now idempotently creates the configured bucket and removes an
+  existing bucket policy. No MinIO credential is stored in a public schema or
+  sent to the frontend.
+- Added endpoint validation, secret-aware settings, and a replaceable storage
+  protocol so tests can use a fake without contacting MinIO.
+- Verified 3 focused storage tests, 23 backend tests, and Ruff in the rebuilt
+  Docker stack. The live `research-images` bucket exists and an anonymous
+  request returned `403 AccessDenied`.
+- Next eligible story: R08.

@@ -12,6 +12,7 @@ from app.db import SessionFactory, create_session_factory
 from app.errors import error_response
 from app.identity import seed_development_identities
 from app.schemas import HealthResponse
+from app.storage import MinioStorage, ObjectStorage
 
 
 @asynccontextmanager
@@ -21,6 +22,10 @@ async def application_lifespan(app: FastAPI):
     session_factory: SessionFactory | None = app.state.session_factory
     if session_factory is None:
         raise RuntimeError("DATABASE_URL must be configured before starting the API")
+
+    storage: ObjectStorage | None = app.state.storage
+    if storage is not None:
+        storage.ensure_private_bucket()
 
     with session_factory() as session:
         try:
@@ -42,6 +47,7 @@ def create_app(
     settings: Settings | None = None,
     *,
     session_factory: SessionFactory | None = None,
+    storage: ObjectStorage | None = None,
 ) -> FastAPI:
     """Create the API with validated configuration and safe error handlers."""
 
@@ -54,12 +60,15 @@ def create_app(
     app.state.settings = resolved_settings
     app.state.database_engine = None
     app.state.session_factory = session_factory
+    app.state.storage = storage
     if session_factory is None and resolved_settings.database_url:
         database_engine, configured_session_factory = create_session_factory(
             resolved_settings.required_database_url
         )
         app.state.database_engine = database_engine
         app.state.session_factory = configured_session_factory
+        if storage is None:
+            app.state.storage = MinioStorage.from_settings(resolved_settings)
 
     app.add_middleware(
         CORSMiddleware,

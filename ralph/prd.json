@@ -111,7 +111,7 @@
       ],
       "checks": ["Storage unit tests pass", "Anonymous bucket request is denied in live stack"],
       "commitMessage": "feat: add private MinIO storage adapter",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
@@ -299,6 +299,7 @@
       "dependsOn": ["R18"],
       "acceptanceCriteria": [
         "README covers all 13 requested topics",
+        "README includes a data-model diagram verified against the final PostgreSQL schema and MinIO separation",
         "Setup, test, upload, and download instructions match verified commands",
         "Security tradeoffs, URL expiry, queue design, and production improvements are honest",
         "AI tool/model usage and personally verified behavior are disclosed"

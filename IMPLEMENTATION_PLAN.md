@@ -24,7 +24,7 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 
 ## Phase 3 - Private object storage and upload flow
 
-- [ ] R07: add MinIO adapter and enforce a private bucket.
+- [x] R07: add MinIO adapter and enforce a private bucket.
 - [ ] R08: validate initiation metadata and generate safe object keys.
 - [ ] R09: persist pending records and issue presigned PUT URLs.
 - [ ] R10: confirm uploads using authorized rows and MinIO object stat.
@@ -47,6 +47,8 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 - [ ] R18: verify the live Hospital A success and Hospital B denial flows.
 - [ ] Human Gate B: inspect the first full end-to-end flow.
 - [ ] R19: write the complete README and AI verification disclosure.
+  - Include a maintained data-model diagram derived from the final PostgreSQL
+    schema, showing that image bytes remain in MinIO rather than the database.
 - [ ] R20: perform final security review and clean-clone rehearsal.
 - [ ] Human Gate C: approve push and submission.
 
