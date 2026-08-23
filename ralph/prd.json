@@ -64,7 +64,7 @@
       ],
       "checks": ["Migration applies to a fresh database", "Model tests pass"],
       "commitMessage": "feat: add tenant upload metadata schema",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

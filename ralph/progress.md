@@ -70,3 +70,20 @@ file records decisions and evidence that should survive a fresh context.
 - Verified Docker rebuild/container startup, seven pytest tests, Ruff, and live
   HTTP health, CORS, and safe-error responses.
 - Next eligible story: R04.
+
+## 2026-08-23 - R04 metadata schema and initial migration
+
+- Added SQLAlchemy models for companies, users, and upload metadata. Image bytes
+  remain outside PostgreSQL in MinIO.
+- Added UUID primary keys and company foreign keys with `RESTRICT` deletion
+  behavior. Upload company IDs and development user company IDs are indexed.
+- Added the `upload_status` PostgreSQL enum with `pending_upload`, `uploaded`,
+  `queued`, `processing`, `completed`, and `failed`.
+- Enforced a unique upload object key and server-managed created/updated
+  timestamps in both model metadata and the initial Alembic migration.
+- Added Alembic configuration that obtains `DATABASE_URL` only from the runtime
+  environment and fails clearly if it is absent.
+- Verified ten pytest tests and Ruff. Applied the migration to a fresh local
+  PostgreSQL schema, verified the head revision, tables, enum values, company
+  index, and object-key unique constraint, then reran the upgrade idempotently.
+- Next eligible story: R05.

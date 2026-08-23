@@ -12,6 +12,8 @@ RUN pip install --requirement requirements.txt
 
 COPY app ./app
 COPY tests ./tests
+COPY alembic.ini ./
+COPY alembic ./alembic
 
 EXPOSE 8000
 
