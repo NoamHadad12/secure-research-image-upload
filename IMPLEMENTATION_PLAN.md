@@ -13,7 +13,7 @@ story state. Product implementation has not started.
 ## Phase 1 - Reproducible foundation
 
 - [x] R01: scaffold backend and frontend workspaces.
-- [ ] R02: add environment contract, ignore rules, and Compose infrastructure.
+- [x] R02: add environment contract, ignore rules, and Compose infrastructure.
 - [ ] R03: add FastAPI configuration, error shape, CORS, and health endpoint.
 
 ## Phase 2 - Metadata and identity

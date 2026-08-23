@@ -33,3 +33,22 @@ file records decisions and evidence that should survive a fresh context.
   frontend build artifacts.
 - No upload, database, object-storage, or authorization behavior was introduced.
 - Next eligible story: R02.
+
+## 2026-08-23 - R02 local Docker Compose infrastructure
+
+- Added `docker-compose.yml` for PostgreSQL 17, private MinIO, FastAPI, and
+  React/Vite with named volumes for database and object-storage data.
+- Added Dockerfiles and Docker ignore files so each application service builds
+  reproducibly from its committed dependency manifest.
+- Added `.env.example` with development-only placeholders. The browser-facing
+  frontend receives only its API URL; no MinIO or database credential is exposed
+  to it.
+- Added root ignore rules for local environment files, runtime data, build
+  outputs, caches, and editor-local settings.
+- Configured MinIO global CORS for the configured frontend origin only. Live
+  preflight verification allowed `http://localhost:5173` and denied
+  `http://evil.example`.
+- Verified `docker compose config`, `docker compose up --build -d`, healthy
+  PostgreSQL, running backend/frontend/MinIO services, frontend HTTP 200, and
+  MinIO health HTTP 200.
+- Next eligible story: R03.

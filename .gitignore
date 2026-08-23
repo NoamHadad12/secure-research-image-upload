@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local Docker and Node runtime state
+.env.*
+!.env.example
+.data/
+postgres_data/
+minio_data/
+node_modules/
+*.tsbuildinfo

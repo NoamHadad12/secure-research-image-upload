@@ -32,7 +32,7 @@
       ],
       "checks": ["docker compose config succeeds", "No real credentials are tracked"],
       "commitMessage": "chore: add local Docker Compose infrastructure",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
