@@ -176,3 +176,36 @@ file records decisions and evidence that should survive a fresh context.
 - Added focused validation and key-layout tests. No route, database write, or
   presigned URL was added; those belong to R09.
 - Next eligible story: R09.
+
+## 2026-08-23 - R09 presigned upload initiation
+
+- Added `POST /api/uploads/initiate`. It resolves the company exclusively from
+  the authenticated development user, creates a UUID and server-generated
+  object key, flushes a `pending_upload` record, then returns only after the
+  database transaction commits.
+- The private storage adapter now signs a five-minute PUT URL through its
+  browser-reachable MinIO client. No signed URL is rewritten, logged, or paired
+  with MinIO credentials in the public response.
+- The response includes only the upload ID, temporary URL, and 300-second
+  expiry; it deliberately omits object key and company metadata.
+- Added API and adapter tests for Hospital A ownership, forged metadata
+  rejection before storage/persistence, the pending state, expiry, and use of
+  the browser-facing signing client. Confirmation remains R10.
+- Next eligible story: R10.
+
+## 2026-08-23 - R10 authorized object confirmation
+
+- Added `POST /api/uploads/{upload_id}/confirm`. It performs the tenant-scoped
+  database lookup before any storage operation, obtains the object key only
+  from the authorized row, and returns the same `404 Upload not found` error
+  for foreign and nonexistent upload IDs.
+- The backend now stats the object through the Docker-internal MinIO client.
+  Missing, empty, and oversized objects remain pending and return a generic
+  conflict response; valid objects persist their size and ETag then transition
+  to `uploaded`. Repeated confirmation of an uploaded record is idempotent.
+- Added a configurable 10 MiB upload limit (`MAX_UPLOAD_BYTES`) and a public
+  confirmation response that omits the object key.
+- Confirmation coverage uses the running PostgreSQL service with cleanup of
+  each generated test row. A fake storage adapter proves authorization precedes
+  storage and avoids real MinIO bytes until R18.
+- Next eligible story: R11.

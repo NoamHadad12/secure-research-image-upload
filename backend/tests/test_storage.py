@@ -2,6 +2,7 @@
 
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from datetime import timedelta
 
 import pytest
 from fastapi.testclient import TestClient
@@ -32,6 +33,7 @@ class FakeMinioClient:
     bucket_policy: str | None = None
     made_buckets: list[tuple[str, str | None]] = field(default_factory=list)
     deleted_policies: list[str] = field(default_factory=list)
+    presigned_puts: list[tuple[str, str, timedelta]] = field(default_factory=list)
 
     def bucket_exists(self, bucket_name: str) -> bool:
         return self.bucket_is_present
@@ -48,6 +50,15 @@ class FakeMinioClient:
     def delete_bucket_policy(self, bucket_name: str) -> None:
         self.bucket_policy = None
         self.deleted_policies.append(bucket_name)
+
+    def presigned_put_object(
+        self,
+        bucket_name: str,
+        object_name: str,
+        expires: timedelta,
+    ) -> str:
+        self.presigned_puts.append((bucket_name, object_name, expires))
+        return f"http://storage.test/{object_name}?temporary-signature"
 
 
 def make_settings() -> Settings:
@@ -87,6 +98,28 @@ def test_bucket_initialization_creates_once_and_removes_anonymous_policy() -> No
 
     assert internal_client.made_buckets == [("research-images", "us-east-1")]
     assert internal_client.deleted_policies == ["research-images"]
+
+
+def test_put_url_is_signed_with_the_browser_reachable_client() -> None:
+    internal_client = FakeMinioClient(bucket_is_present=True)
+    public_client = FakeMinioClient(bucket_is_present=True)
+    storage = MinioStorage(
+        bucket_name="research-images",
+        region="us-east-1",
+        internal_client=internal_client,
+        public_signing_client=public_client,
+    )
+
+    url = storage.presigned_put_url(
+        object_key="uploads/company/upload/scan.png",
+        expires=timedelta(minutes=5),
+    )
+
+    assert url == "http://storage.test/uploads/company/upload/scan.png?temporary-signature"
+    assert internal_client.presigned_puts == []
+    assert public_client.presigned_puts == [
+        ("research-images", "uploads/company/upload/scan.png", timedelta(minutes=5)),
+    ]
 
 
 @dataclass

@@ -1,18 +1,35 @@
 """FastAPI application entry point and public infrastructure boundary."""
 
 from contextlib import asynccontextmanager
+from datetime import timedelta
+from uuid import UUID, uuid4
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.config import Settings, get_settings
-from app.db import SessionFactory, create_session_factory
+from app.db import SessionFactory, create_session_factory, get_db_session
 from app.errors import error_response
-from app.identity import seed_development_identities
-from app.schemas import HealthResponse
-from app.storage import MinioStorage, ObjectStorage
+from app.identity import CurrentUser, get_current_user, seed_development_identities
+from app.models import Upload, UploadStatus
+from app.schemas import HealthResponse, UploadConfirmationResponse, UploadInitiationResponse
+from app.storage import MinioStorage, ObjectMissingError, ObjectStorage
+from app.upload_metadata import UploadInitiationMetadata, build_object_key
+from app.upload_repository import add_upload, get_upload_for_company
+
+PRESIGNED_UPLOAD_URL_EXPIRY = timedelta(minutes=5)
+
+
+def get_object_storage(request: Request) -> ObjectStorage:
+    """Return the application storage adapter without exposing its credentials."""
+
+    storage: ObjectStorage | None = getattr(request.app.state, "storage", None)
+    if storage is None:
+        raise RuntimeError("Object storage is not configured")
+    return storage
 
 
 @asynccontextmanager
@@ -93,7 +110,11 @@ def create_app(
     async def handle_http_error(_: Request, exception: StarletteHTTPException):
         if exception.status_code == status.HTTP_404_NOT_FOUND:
             code = "not_found"
-            message = "Resource not found"
+            message = (
+                "Upload not found"
+                if exception.detail == "Upload not found"
+                else "Resource not found"
+            )
         elif exception.status_code == status.HTTP_405_METHOD_NOT_ALLOWED:
             code = "method_not_allowed"
             message = "Method not allowed"
@@ -120,6 +141,107 @@ def create_app(
         """Report process availability without exposing dependency details."""
 
         return HealthResponse(status="ok")
+
+    @app.post(
+        "/api/uploads/initiate",
+        response_model=UploadInitiationResponse,
+        status_code=status.HTTP_201_CREATED,
+        tags=["uploads"],
+    )
+    def initiate_upload(
+        metadata: UploadInitiationMetadata,
+        current_user: CurrentUser = Depends(get_current_user),
+        session: Session = Depends(get_db_session),
+        storage: ObjectStorage = Depends(get_object_storage),
+    ) -> UploadInitiationResponse:
+        """Persist a tenant-owned pending upload before issuing its temporary PUT URL."""
+
+        upload_id = uuid4()
+        object_key = build_object_key(
+            company_id=current_user.company_id,
+            upload_id=upload_id,
+            safe_filename=metadata.filename,
+        )
+        upload = Upload(
+            id=upload_id,
+            sample_id=metadata.sample_id,
+            original_filename=metadata.filename,
+            classification=metadata.classification,
+            company_id=current_user.company_id,
+            object_key=object_key,
+            content_type=metadata.content_type,
+        )
+
+        try:
+            add_upload(session, upload=upload)
+            upload_url = storage.presigned_put_url(
+                object_key=upload.object_key,
+                expires=PRESIGNED_UPLOAD_URL_EXPIRY,
+            )
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+        return UploadInitiationResponse(
+            upload_id=upload.id,
+            upload_url=upload_url,
+            upload_url_expires_in_seconds=int(PRESIGNED_UPLOAD_URL_EXPIRY.total_seconds()),
+        )
+
+    @app.post(
+        "/api/uploads/{upload_id}/confirm",
+        response_model=UploadConfirmationResponse,
+        tags=["uploads"],
+    )
+    def confirm_upload(
+        upload_id: UUID,
+        current_user: CurrentUser = Depends(get_current_user),
+        session: Session = Depends(get_db_session),
+        storage: ObjectStorage = Depends(get_object_storage),
+    ) -> UploadConfirmationResponse:
+        """Verify an authorized MinIO object before recording it as uploaded."""
+
+        upload = get_upload_for_company(
+            session,
+            upload_id=upload_id,
+            company_id=current_user.company_id,
+        )
+        if upload is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
+
+        if upload.status is UploadStatus.UPLOADED:
+            return UploadConfirmationResponse(upload_id=upload.id, status=upload.status.value)
+        if upload.status is not UploadStatus.PENDING_UPLOAD:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Upload cannot be confirmed",
+            )
+
+        try:
+            object_stat = storage.stat_object(object_key=upload.object_key)
+        except ObjectMissingError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Upload cannot be confirmed",
+            ) from None
+
+        if object_stat.size_bytes <= 0 or object_stat.size_bytes > resolved_settings.max_upload_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Upload cannot be confirmed",
+            )
+
+        try:
+            upload.size_bytes = object_stat.size_bytes
+            upload.etag = object_stat.etag
+            upload.status = UploadStatus.UPLOADED
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+
+        return UploadConfirmationResponse(upload_id=upload.id, status=upload.status.value)
 
     return app
 

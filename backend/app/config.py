@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     minio_public_endpoint: str = "localhost:9000"
     minio_root_user: str | None = None
     minio_root_password: SecretStr | None = None
+    max_upload_bytes: int = 10 * 1024 * 1024
 
     @field_validator("frontend_origin")
     @classmethod
@@ -50,6 +51,15 @@ class Settings(BaseSettings):
         if not normalized_value or "://" in normalized_value or "/" in normalized_value:
             raise ValueError("MinIO endpoints must use host:port without a URL scheme or path")
         return normalized_value
+
+    @field_validator("max_upload_bytes")
+    @classmethod
+    def require_positive_upload_size_limit(cls, value: int) -> int:
+        """Reject a size limit that could permit only empty uploads."""
+
+        if value <= 0:
+            raise ValueError("MAX_UPLOAD_BYTES must be greater than zero")
+        return value
 
     @property
     def normalized_frontend_origin(self) -> str:

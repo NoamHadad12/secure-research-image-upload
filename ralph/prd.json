@@ -143,7 +143,7 @@
       ],
       "checks": ["Hospital A initiation test passes", "Invalid metadata tests pass"],
       "commitMessage": "feat: issue short-lived presigned upload URLs",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
@@ -160,7 +160,7 @@
       ],
       "checks": ["Confirmation success and failure tests pass", "Foreign confirmation never calls storage"],
       "commitMessage": "feat: verify and confirm completed MinIO uploads",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

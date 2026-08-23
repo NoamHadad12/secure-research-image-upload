@@ -17,3 +17,8 @@ def test_frontend_origin_is_normalized() -> None:
 def test_invalid_frontend_origin_is_rejected(origin: str) -> None:
     with pytest.raises(ValidationError):
         Settings(frontend_origin=origin)
+
+
+def test_non_positive_upload_size_limit_is_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(max_upload_bytes=0)

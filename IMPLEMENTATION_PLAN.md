@@ -26,8 +26,8 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 
 - [x] R07: add MinIO adapter and enforce a private bucket.
 - [x] R08: validate initiation metadata and generate safe object keys.
-- [ ] R09: persist pending records and issue presigned PUT URLs.
-- [ ] R10: confirm uploads using authorized rows and MinIO object stat.
+- [x] R09: persist pending records and issue presigned PUT URLs.
+- [x] R10: confirm uploads using authorized rows and MinIO object stat.
 - [ ] R11: simulate queued/processing/completed/failed transitions.
 
 ## Phase 4 - Access and download
