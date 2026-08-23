@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, Enum as SqlEnum, ForeignKey, String, func
+from sqlalchemy import BigInteger, DateTime, Enum as SqlEnum, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -23,7 +23,7 @@ class UploadStatus(str, Enum):
 
 
 class TimestampMixin:
-    """Server-managed timestamps for auditable metadata."""
+    """Timestamps initialized by the database and refreshed by ORM updates."""
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -88,7 +88,7 @@ class Upload(TimestampMixin, Base):
         nullable=False,
     )
     content_type: Mapped[str] = mapped_column(String(100), nullable=False)
-    size_bytes: Mapped[int | None] = mapped_column(nullable=True)
+    size_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     etag: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     company: Mapped[Company] = relationship(back_populates="uploads")

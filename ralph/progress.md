@@ -79,11 +79,21 @@ file records decisions and evidence that should survive a fresh context.
   behavior. Upload company IDs and development user company IDs are indexed.
 - Added the `upload_status` PostgreSQL enum with `pending_upload`, `uploaded`,
   `queued`, `processing`, `completed`, and `failed`.
-- Enforced a unique upload object key and server-managed created/updated
-  timestamps in both model metadata and the initial Alembic migration.
+- Enforced a unique upload object key, database-initialized timestamps, and ORM
+  timestamp refresh behavior in the model metadata and initial Alembic migration.
 - Added Alembic configuration that obtains `DATABASE_URL` only from the runtime
   environment and fails clearly if it is absent.
 - Verified ten pytest tests and Ruff. Applied the migration to a fresh local
   PostgreSQL schema, verified the head revision, tables, enum values, company
   index, and object-key unique constraint, then reran the upgrade idempotently.
 - Next eligible story: R05.
+
+## 2026-08-23 - R02-R04 quality audit
+
+- Rebuilt the backend and revalidated the complete R02-R04 baseline: ten pytest
+  tests, Ruff, `alembic check`, production React build, and all Compose services.
+- Detected and corrected a model/migration type drift before it could reach a
+  later migration: `uploads.size_bytes` now explicitly uses PostgreSQL
+  `BIGINT` in both places. A model test protects this contract.
+- Clarified timestamp documentation so it accurately distinguishes database
+  initialization from SQLAlchemy's update-time SQL expression.

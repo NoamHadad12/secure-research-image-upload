@@ -1,3 +1,5 @@
+from sqlalchemy import BigInteger
+
 from app.db import Base
 from app.models import UploadStatus
 
@@ -20,6 +22,7 @@ def test_upload_metadata_schema_enforces_company_index_and_unique_object_key() -
     assert uploads.c.object_key.unique is True
     assert uploads.c.status.default.arg is UploadStatus.PENDING_UPLOAD
     assert str(uploads.c.status.server_default.arg) == "pending_upload"
+    assert isinstance(uploads.c.size_bytes.type, BigInteger)
 
 
 def test_models_match_the_expected_company_relationships() -> None:
