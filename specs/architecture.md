@@ -9,9 +9,9 @@
 - Tests: pytest and FastAPI TestClient, with a fake storage adapter for API
   behavior and a live MinIO smoke flow for the completed stack.
 
-The backend runs in Docker because the development machine currently exposes
-only 32-bit Python 3.8. Containerizing the runtime also gives reviewers a more
-reproducible setup.
+The backend runs in Docker to pin the application runtime to Python 3.12
+independently of the host setup. Containerizing the runtime also gives reviewers
+a more reproducible setup.
 
 ## Service topology
 
