@@ -95,7 +95,7 @@
       ],
       "checks": ["Repository isolation tests pass"],
       "commitMessage": "feat: enforce tenant-scoped upload persistence",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

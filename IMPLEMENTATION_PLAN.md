@@ -1,7 +1,7 @@
 # Implementation Plan
 
 This file is the human-readable Ralph plan. `ralph/prd.json` is the executable
-story state. Product implementation has not started.
+story state. Product implementation is in progress on the tracked `dev` branch.
 
 ## Phase 0 - Planning gate
 
@@ -20,7 +20,7 @@ story state. Product implementation has not started.
 
 - [x] R04: add SQLAlchemy upload/identity models and initial migration.
 - [x] R05: seed Hospital A/B users and resolve `X-User-ID` server-side.
-- [ ] R06: add tenant-scoped upload repository operations.
+- [x] R06: add tenant-scoped upload repository operations.
 
 ## Phase 3 - Private object storage and upload flow
 

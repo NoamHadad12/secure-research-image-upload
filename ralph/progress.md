@@ -124,3 +124,18 @@ file records decisions and evidence that should survive a fresh context.
   the test transaction back.
 - Verified 16 pytest tests, Ruff, and Alembic model/migration consistency.
 - Next eligible story remains R06.
+
+## 2026-08-23 - R06 tenant-scoped upload repository
+
+- Added a dedicated upload repository with explicit SQL filters for company-scoped
+  list and detail reads. The detail lookup includes both `upload_id` and
+  `company_id` in the same query.
+- Foreign and nonexistent upload IDs both return `None`; later API routes will
+  map that shared outcome to the same safe `404 Upload not found` response.
+- Added a flush-only metadata persistence helper. The caller owns commit or
+  rollback so later upload initiation and confirmation flows can stay atomic.
+- Added repository isolation tests for owner reads, cross-company list isolation,
+  foreign/nonexistent equivalence, and non-committing persistence.
+- Verified the focused repository suite (4 tests), full backend suite (20 tests),
+  and Ruff in the rebuilt Docker backend.
+- Next eligible story: R07.
