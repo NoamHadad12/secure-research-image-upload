@@ -436,3 +436,42 @@ file records decisions and evidence that should survive a fresh context.
   pass and the global Ralph stop condition is satisfied.
 - Push remains a separate destructive/external action and was not authorized or
   performed by this approval.
+
+## 2026-08-24 - R21 stable polling and browser feedback
+
+- Diagnosed the visible two-second flash as the background status poll reusing
+  the foreground `loading` state. Four abandoned `pending_upload` initiation
+  records kept that poll alive indefinitely even though those records cannot
+  advance without browser confirmation.
+- Limited automatic polling to `uploaded`, `queued`, and `processing`. Background
+  refreshes now preserve the rendered list and enabled refresh control, while
+  initial loads, manual refreshes, and development-user switches retain an
+  explicit accessible loading state.
+- Added non-destructive background failure feedback: existing records remain
+  visible and the message tells the user to retry manually. A successful refresh
+  clears the message.
+- Verified that failure path in the browser by briefly stopping the local backend
+  while a controlled record was in `processing`: the prior records stayed
+  visible, the refresh button stayed enabled, and clear manual-retry guidance
+  appeared without the blocking loading message. The record and service were
+  then restored and the health endpoint returned HTTP 200.
+- Added an explicit SVG favicon and linked it from the application document.
+  `http://localhost:5173/favicon.svg` returned HTTP 200 with
+  `image/svg+xml`, and the real-browser console had no warnings or errors.
+- Real-browser verification kept four `pending_upload` rows visible for more
+  than five seconds without a loading message or disabled refresh button. A
+  controlled temporary `processing` status produced repeated successful
+  `/api/uploads` requests every two seconds while the same UI remained stable.
+- Rechecked the development-user boundary in the browser: Bob's view contained
+  none of Alice's filenames or sample metadata, and switching back restored
+  Alice's accessible records.
+- Removed exactly four abandoned local demo rows (`demo-001` through
+  `demo-004`) after confirming that none of their server-generated object keys
+  existed in MinIO. The database now contains only the five completed demo
+  uploads; no completed record or stored image was removed.
+- Validation passed: `docker compose config --quiet`, `docker compose ps`, 57
+  backend tests, Ruff, the frontend production build, favicon HTTP verification,
+  and the real-browser pending, processing, failure, console, and user-switch
+  checks.
+- R21 is complete. The change is intentionally left uncommitted pending the
+  user's separate commit approval.

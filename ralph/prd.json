@@ -325,6 +325,23 @@
       "commitMessage": "chore: complete submission readiness review",
       "passes": true,
       "blocked": false
+    },
+    {
+      "id": "R21",
+      "priority": 21,
+      "title": "Stabilize status polling and browser feedback",
+      "dependsOn": ["R20"],
+      "acceptanceCriteria": [
+        "pending_upload remains visible but does not trigger indefinite automatic polling",
+        "uploaded, queued, and processing records refresh silently without a blocking loading flash",
+        "A background refresh failure preserves visible records and provides clear retry feedback",
+        "Initial, manual, and user-switch loading states remain explicit and accessible",
+        "The configured favicon loads successfully without a browser-console 404"
+      ],
+      "checks": ["Frontend production build passes", "Backend regression suite passes", "Polling and favicon behavior are verified in a real browser"],
+      "commitMessage": "fix: stabilize upload polling and browser feedback",
+      "passes": true,
+      "blocked": false
     }
   ]
 }

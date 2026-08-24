@@ -54,9 +54,16 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 - [x] R20: perform final security review and clean-clone rehearsal.
 - [x] Human Gate C: approve the final diff and submission readiness.
 
+## Phase 7 - Post-review UX correction
+
+- [x] R21: stabilize background status polling and remove browser-shell noise.
+  - Keep abandoned `pending_upload` records visible without polling forever.
+  - Refresh processing statuses silently without flashing the blocking loading UI.
+  - Serve an explicit local favicon so the browser console remains clean.
+
 ## Global stop condition
 
-Ralph stops only when every R01-R20 story passes, all required automated checks
+Ralph stops only when every R01-R21 story passes, all required automated checks
 are green, the live cross-company scenario is verified, the README covers all 13
 requested topics, and a clean clone can be run from documented commands.
 

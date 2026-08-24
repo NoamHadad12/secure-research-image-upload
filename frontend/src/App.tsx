@@ -18,13 +18,18 @@ const developmentUsers: readonly DevelopmentUser[] = [
 
 const classifications = ["research", "clinical", "restricted"] as const;
 const acceptedContentTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
-const activeUploadStatuses = new Set(["pending_upload", "uploaded", "queued", "processing"]);
+const pollingUploadStatuses = new Set(["uploaded", "queued", "processing"]);
 const pollingIntervalMilliseconds = 2_000;
 
 type RecordLoadState =
   | { kind: "loading" }
   | { kind: "ready" }
   | { kind: "error"; message: string };
+
+type RecordRefreshRequest = {
+  sequence: number;
+  background: boolean;
+};
 
 type UploadState =
   | { kind: "idle" }
@@ -55,7 +60,11 @@ export function App() {
   const [selectedUser, setSelectedUser] = useState<DevelopmentUser>(developmentUsers[0]);
   const [records, setRecords] = useState<UploadRecord[]>([]);
   const [recordLoadState, setRecordLoadState] = useState<RecordLoadState>({ kind: "loading" });
-  const [recordRefreshVersion, setRecordRefreshVersion] = useState(0);
+  const [recordRefreshRequest, setRecordRefreshRequest] = useState<RecordRefreshRequest>({
+    sequence: 0,
+    background: false,
+  });
+  const [backgroundRefreshError, setBackgroundRefreshError] = useState<string | null>(null);
   const [sampleId, setSampleId] = useState("");
   const [classification, setClassification] = useState<(typeof classifications)[number]>("research");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -75,11 +84,22 @@ export function App() {
         }
         setRecords(loadedRecords);
         setRecordLoadState({ kind: "ready" });
+        setBackgroundRefreshError(null);
       })
       .catch((error: unknown) => {
         if (!isCurrentRequest || (error instanceof DOMException && error.name === "AbortError")) {
           return;
         }
+
+        if (recordRefreshRequest.background) {
+          setBackgroundRefreshError(
+            error instanceof ApiError
+              ? `Could not refresh status updates: ${error.message}`
+              : "Could not refresh status updates. Use Refresh records to try again.",
+          );
+          return;
+        }
+
         setRecords([]);
         setRecordLoadState({
           kind: "error",
@@ -91,21 +111,23 @@ export function App() {
       isCurrentRequest = false;
       controller.abort();
     };
-  }, [recordRefreshVersion, selectedUser.id]);
+  }, [recordRefreshRequest, selectedUser.id]);
 
-  const hasActiveUploads = records.some((record) => activeUploadStatuses.has(record.status));
+  const hasPollingUploads = records.some((record) => pollingUploadStatuses.has(record.status));
 
   useEffect(() => {
-    if (!hasActiveUploads) {
+    if (!hasPollingUploads) {
       return;
     }
 
     const timer = window.setTimeout(() => {
-      setRecordLoadState({ kind: "loading" });
-      setRecordRefreshVersion((version) => version + 1);
+      setRecordRefreshRequest((request) => ({
+        sequence: request.sequence + 1,
+        background: true,
+      }));
     }, pollingIntervalMilliseconds);
     return () => window.clearTimeout(timer);
-  }, [hasActiveUploads, records]);
+  }, [hasPollingUploads, records]);
 
   const uploadInProgress = ["initiating", "uploading", "confirming"].includes(uploadState.kind);
   const downloadInProgress = downloadState.kind === "requesting";
@@ -115,8 +137,12 @@ export function App() {
     if (clearRecords) {
       setRecords([]);
     }
+    setBackgroundRefreshError(null);
     setRecordLoadState({ kind: "loading" });
-    setRecordRefreshVersion((version) => version + 1);
+    setRecordRefreshRequest((request) => ({
+      sequence: request.sequence + 1,
+      background: false,
+    }));
   }
 
   function selectUser(user: DevelopmentUser): void {
@@ -127,8 +153,13 @@ export function App() {
     // Clear the old tenant's data before the new tenant's request can resolve.
     setRecords([]);
     setRecordLoadState({ kind: "loading" });
+    setBackgroundRefreshError(null);
     setUploadState({ kind: "idle" });
     setDownloadState({ kind: "idle" });
+    setRecordRefreshRequest((request) => ({
+      sequence: request.sequence + 1,
+      background: false,
+    }));
     setSelectedUser(user);
   }
 
@@ -295,7 +326,10 @@ export function App() {
         </section>
       </section>
 
-      <section aria-labelledby="records-heading">
+      <section
+        aria-busy={recordLoadState.kind === "loading"}
+        aria-labelledby="records-heading"
+      >
         <h2 id="records-heading">Accessible uploads</h2>
         <button disabled={recordLoadState.kind === "loading"} onClick={() => refreshRecords()} type="button">
           Refresh records
@@ -309,6 +343,7 @@ export function App() {
           {recordLoadState.kind === "ready" && records.length === 0 && (
             <p>No uploads are accessible for this development user.</p>
           )}
+          {backgroundRefreshError !== null && <p role="alert">{backgroundRefreshError}</p>}
         </section>
 
         {records.length > 0 && (
