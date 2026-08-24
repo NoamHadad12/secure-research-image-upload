@@ -31,3 +31,9 @@ export type UploadConfirmation = {
   upload_id: string;
   status: string;
 };
+
+export type DownloadUrl = {
+  upload_id: string;
+  download_url: string;
+  download_url_expires_in_seconds: number;
+};

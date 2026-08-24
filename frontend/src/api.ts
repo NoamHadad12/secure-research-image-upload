@@ -1,4 +1,5 @@
 import type {
+  DownloadUrl,
   UploadConfirmation,
   UploadInitiation,
   UploadInitiationMetadata,
@@ -30,6 +31,7 @@ export type ApiClient = {
     signal?: AbortSignal,
   ): Promise<UploadInitiation>;
   confirmUpload(uploadId: string, signal?: AbortSignal): Promise<UploadConfirmation>;
+  createDownloadUrl(uploadId: string, signal?: AbortSignal): Promise<DownloadUrl>;
 };
 
 function readErrorMessage(body: unknown): string {
@@ -94,6 +96,11 @@ export function createApiClient(developmentUserId: string): ApiClient {
       }),
     confirmUpload: (uploadId, signal) =>
       request<UploadConfirmation>(`/api/uploads/${uploadId}/confirm`, {
+        method: "POST",
+        signal,
+      }),
+    createDownloadUrl: (uploadId, signal) =>
+      request<DownloadUrl>(`/api/uploads/${uploadId}/download-url`, {
         method: "POST",
         signal,
       }),

@@ -301,3 +301,18 @@ file records decisions and evidence that should survive a fresh context.
   rejected the request before signing, the UI displayed `Request validation failed`,
   and the upload button remained enabled for retry.
 - Next eligible story: R17.
+
+## 2026-08-24 - R17 upload list, status polling, and downloads
+
+- Added an accessible list that exposes only public upload metadata: filename,
+  sample ID, classification, status, and created time. Pending uploads explain
+  why download is unavailable rather than attempting an ineligible request.
+- Added a manual refresh control and two-second status polling only while a
+  visible record is pending, uploaded, queued, or processing; polling stops as
+  soon as no active status remains.
+- Each Download click asks the backend for a fresh authorized URL and starts a
+  direct browser download without retaining or logging that temporary URL.
+- Verified the production frontend build and browser states: Alice saw her
+  records and downloaded a confirmed image; Bob saw the accessible-empty state
+  with none of Alice's record metadata.
+- Next eligible story: R18.

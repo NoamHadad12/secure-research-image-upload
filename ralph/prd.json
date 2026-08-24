@@ -272,7 +272,7 @@
       ],
       "checks": ["Frontend build passes", "All UI states verified in browser"],
       "commitMessage": "feat: display tenant uploads statuses and downloads",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
