@@ -498,3 +498,22 @@ file records decisions and evidence that should survive a fresh context.
   Ruff, the frontend production build, and the real-browser identity-switch and
   tenant-isolation checks.
 - R22 is complete. All R01-R22 stories pass.
+
+## 2026-08-24 - R23 README accuracy and secret-safe validation
+
+- Replaced the documented `docker compose config` command with
+  `docker compose config --quiet` so validation does not print resolved local
+  database or MinIO passwords.
+- Clarified that the backend persists and returns the sanitized filename in the
+  `original_filename` column; it does not retain the raw browser-supplied name.
+- Renamed the documented command sequence from a complete local pass to the
+  standard automated pass and explicitly retained browser, cross-company, and
+  anonymous-storage checks as separate requirements.
+- Documented the three accepted classifications and the exact generic 404 JSON
+  body used for both foreign and nonexistent upload IDs.
+- Marked the 57-test R19/R20 evidence as historical and explained that R22 added
+  the identity regression test that brings the current suite to 58 tests.
+- Reran the documented commands: Compose configuration and build succeeded, all
+  58 backend tests passed, Ruff passed, the frontend production build passed,
+  and all four services were running with PostgreSQL healthy.
+- R23 is complete. All R01-R23 stories pass.

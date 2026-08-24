@@ -54,10 +54,13 @@ Do not reuse these placeholder credentials outside local development and do not 
 Validate the resolved configuration and start the stack:
 
 ```bash
-docker compose config
+docker compose config --quiet
 docker compose up --build -d
 docker compose ps
 ```
+
+The `--quiet` check validates the Compose configuration without printing resolved
+environment values such as local database or MinIO passwords.
 
 Open [http://localhost:5173](http://localhost:5173). Select Dana or David with the development user switch. The API health endpoint is [http://localhost:8000/health](http://localhost:8000/health), and local API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
@@ -115,16 +118,20 @@ The backend suite currently contains 58 tests. It includes the four required cas
 
 It also covers generic foreign/nonexistent responses, object-key generation, confirmation checks, status processing, presigned URL expiry, private storage configuration, and public response-field restrictions.
 
-For a complete local validation pass:
+For the standard automated validation pass:
 
 ```bash
-docker compose config
+docker compose config --quiet
 docker compose up --build -d
 docker compose exec backend pytest
 docker compose exec backend ruff check .
 docker compose exec frontend npm run build
 docker compose ps
 ```
+
+Frontend stories additionally require browser verification, and security changes
+require negative cross-company and anonymous-storage checks. The automated commands
+above do not replace those end-to-end checks.
 
 ## 4. Data model
 
@@ -174,7 +181,7 @@ The `upload_status` PostgreSQL enum contains:
 pending_upload, uploaded, queued, processing, completed, failed
 ```
 
-`pending_upload` is an internal pre-confirmation state. The other five values are the assignment's required processing states. The public upload records contain the upload ID, sample ID, original filename, classification, status, and creation time; they intentionally omit the company ID, object key, ETag, and stored size.
+`pending_upload` is an internal pre-confirmation state. The other five values are the assignment's required processing states. The public upload records contain the upload ID, sample ID, sanitized filename, classification, status, and creation time; they intentionally omit the company ID, object key, ETag, and stored size. Despite the database column name `original_filename`, the service stores the sanitized filename there and does not retain the raw browser-supplied name.
 
 ## 5. Why metadata and object bytes are stored separately
 
@@ -184,7 +191,7 @@ The database stores only the generated object key and verified object facts such
 
 ## 6. Upload flow and presigned URL lifecycle
 
-1. The user selects Dana or David, enters a sample ID and classification, and chooses a PNG, JPEG, or WebP image of at most 10 MiB.
+1. The user selects Dana or David, enters a sample ID and one of the `research`, `clinical`, or `restricted` classifications, and chooses a PNG, JPEG, or WebP image of at most 10 MiB.
 2. The browser sends only `sample_id`, `filename`, `classification`, and `content_type` to `POST /api/uploads/initiate`, together with the development `X-User-ID` header.
 3. The backend resolves the user and company, validates the metadata, allocates an upload UUID, sanitizes the filename, and generates the company-scoped object key. Client-supplied `company_id`, `object_key`, or other extra fields are rejected.
 4. The backend creates a `pending_upload` row and returns a presigned MinIO `PUT` URL valid for 5 minutes.
@@ -199,7 +206,7 @@ The URL is a time-limited bearer capability, not a one-time token. It can be reu
 
 1. The UI asks the backend for `POST /api/uploads/{upload_id}/download-url`.
 2. The backend resolves the current user and queries by both `upload_id` and `company_id`.
-3. A foreign upload ID and a nonexistent upload ID both return exactly `404 Upload not found`. The backend does not reveal filename, status, company, object key, or whether the foreign object exists.
+3. A foreign upload ID and a nonexistent upload ID both return HTTP `404` with the same body: `{"error":{"code":"not_found","message":"Upload not found"}}`. The backend does not reveal filename, status, company, object key, or whether the foreign object exists.
 4. Only after authorization succeeds does the backend read the object key from the row and create a presigned MinIO `GET` URL valid for 1 minute.
 5. The browser downloads the bytes directly from MinIO.
 
@@ -248,9 +255,9 @@ In production, confirmation would commit `uploaded` and enqueue an upload ID—p
 
 OpenAI Codex, powered by GPT-5, was used to help decompose the assignment, review security invariants, implement and review code and tests, drive local Docker/browser checks, and draft documentation. AI assistance was not treated as proof that the system worked.
 
-I retained control over engineering decisions and commit approval, reviewed the produced diffs and evidence, and approved the first complete end-to-end gate. In the local environment, Codex executed the repeatable checks while I reviewed the results: all 57 backend tests passed, Ruff passed, the production frontend build passed, and Docker Compose reported all services running. The browser-to-MinIO flow was exercised with a real image: the Hospital A identity uploaded and downloaded matching bytes, the Hospital B identity received the same generic 404 response for that upload as for a random UUID, and unsigned MinIO list/read attempts returned 403.
+I retained control over engineering decisions and commit approval, reviewed the produced diffs and evidence, and approved the first complete end-to-end gate. At the R19 documentation milestone, Codex executed the repeatable checks while I reviewed the results: all 57 backend tests then present passed, Ruff passed, the production frontend build passed, and Docker Compose reported all services running. The browser-to-MinIO flow was exercised with a real image: the Hospital A identity uploaded and downloaded matching bytes, the Hospital B identity received the same generic 404 response for that upload as for a random UUID, and unsigned MinIO list/read attempts returned 403.
 
-The final clean-clone rehearsal and secret/history review were completed locally on 24 August 2026. A fresh clone using `.env.example` and new Docker volumes applied its migration, passed all 57 backend tests, Ruff, Alembic drift detection, Python dependency consistency, and the frontend production build. Its real MinIO smoke flow also reproduced the Hospital A identity's byte-identical owner download, the Hospital B identity's generic denials, and anonymous-storage 403 responses. Human Gate C approved the final diff and submission readiness after reviewing this evidence.
+The R20 clean-clone rehearsal and secret/history review were completed locally on 24 August 2026. A fresh clone using `.env.example` and new Docker volumes applied its migration, passed all 57 backend tests then present, Ruff, Alembic drift detection, Python dependency consistency, and the frontend production build. Its real MinIO smoke flow also reproduced the Hospital A identity's byte-identical owner download, the Hospital B identity's generic denials, and anonymous-storage 403 responses. Human Gate C approved the final diff and submission readiness after reviewing this evidence. R22 later added one identity regression test, bringing the current backend suite to the 58 tests documented above.
 
 ## Development identities and API surface
 

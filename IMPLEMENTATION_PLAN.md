@@ -68,9 +68,17 @@ story state. Product implementation is in progress on the tracked `dev` branch.
   - Rename the stable Hospital A/B identities to Dana and David consistently.
   - Keep the interface responsive, accessible, and intentionally lightweight.
 
+## Phase 9 - README accuracy review
+
+- [x] R23: tighten README accuracy and secret-safe validation guidance.
+  - Validate Compose configuration without printing resolved credentials.
+  - Describe the persisted sanitized filename and exact generic 404 body.
+  - Distinguish automated checks from browser and negative security checks.
+  - Separate the historical 57-test milestones from the current 58-test suite.
+
 ## Global stop condition
 
-Ralph stops only when every R01-R22 story passes, all required automated checks
+Ralph stops only when every R01-R23 story passes, all required automated checks
 are green, the live cross-company scenario is verified, the README covers all 13
 requested topics, and a clean clone can be run from documented commands.
 

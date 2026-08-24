@@ -359,6 +359,23 @@
       "commitMessage": "style: polish the research upload interface",
       "passes": true,
       "blocked": false
+    },
+    {
+      "id": "R23",
+      "priority": 23,
+      "title": "Tighten README accuracy and secret-safe validation",
+      "dependsOn": ["R22"],
+      "acceptanceCriteria": [
+        "Documented Compose validation does not print resolved credentials",
+        "Filename documentation matches the sanitized value persisted by the backend",
+        "Automated validation is clearly distinguished from browser and negative security checks",
+        "Historical 57-test evidence is distinguished from the current 58-test suite",
+        "Classification values and the generic 404 response body are documented precisely"
+      ],
+      "checks": ["README claims match the implementation", "Documented automated validation commands pass"],
+      "commitMessage": "docs: tighten README accuracy and validation guidance",
+      "passes": true,
+      "blocked": false
     }
   ]
 }
