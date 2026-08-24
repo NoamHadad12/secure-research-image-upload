@@ -51,8 +51,8 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 - [x] R19: write the complete README and AI verification disclosure.
   - Include a maintained data-model diagram derived from the final PostgreSQL
     schema, showing that image bytes remain in MinIO rather than the database.
-- [ ] R20: perform final security review and clean-clone rehearsal.
-- [ ] Human Gate C: approve push and submission.
+- [x] R20: perform final security review and clean-clone rehearsal.
+- [x] Human Gate C: approve the final diff and submission readiness.
 
 ## Global stop condition
 

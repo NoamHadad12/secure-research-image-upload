@@ -250,7 +250,7 @@ OpenAI Codex, powered by GPT-5, was used to help decompose the assignment, revie
 
 I retained control over engineering decisions and commit approval, reviewed the produced diffs and evidence, and approved the first complete end-to-end gate. In the local environment, Codex executed the repeatable checks while I reviewed the results: all 57 backend tests passed, Ruff passed, the production frontend build passed, and Docker Compose reported all services running. The browser-to-MinIO flow was exercised with a real image: Alice uploaded and downloaded matching bytes, Bob received the same generic 404 response for Alice's upload as for a random UUID, and unsigned MinIO list/read attempts returned 403.
 
-The final clean-clone rehearsal and secret/history review are intentionally a separate final submission gate; they are not claimed complete here.
+The final clean-clone rehearsal and secret/history review were completed locally on 24 August 2026. A fresh clone using `.env.example` and new Docker volumes applied its migration, passed all 57 backend tests, Ruff, Alembic drift detection, Python dependency consistency, and the frontend production build. Its real MinIO smoke flow also reproduced Alice's byte-identical owner download, Bob's generic denials, and anonymous-storage 403 responses. Human Gate C approved the final diff and submission readiness after reviewing this evidence.
 
 ## Development identities and API surface
 
@@ -272,11 +272,12 @@ The frontend sends the chosen ID in `X-User-ID`. The backend resolves the matchi
 | `GET` | `/api/uploads/{upload_id}` | Read one company-scoped record |
 | `POST` | `/api/uploads/{upload_id}/download-url` | Authorize and issue a 1-minute download URL |
 
-## Walkthrough suggestion
+## 15–20 minute walkthrough script
 
-1. Open the UI as Alice and upload a valid image.
-2. Observe `uploaded`, `queued`, `processing`, and `completed` as the list refreshes.
-3. Download the image as Alice.
-4. Switch to Bob and confirm that Alice's record is absent.
-5. Use the API tests to show that Alice's known UUID and a random UUID produce the same Bob-facing 404 and that no download URL is signed.
-6. Point to the company-scoped repository query, server-generated object key, private bucket initialization, and the four required tests during the code walkthrough.
+1. **Problem and architecture (2 minutes):** state the Hospital A/Hospital B isolation invariant, then show the browser → FastAPI/PostgreSQL path for metadata and the browser → MinIO path for presigned file bytes.
+2. **Data and trust boundaries (3 minutes):** show the Mermaid model, the server-resolved development identity, the strict request schema, and the generated `uploads/{company}/{upload}/{filename}` key. Explain that the signed URL contains the key but the browser never chooses it.
+3. **Alice upload (4 minutes):** select Alice, upload a valid image, and narrate initiate → direct PUT → confirm → object stat → processing. Point out that transient status values may advance quickly.
+4. **Owner download and Bob denial (3 minutes):** download as Alice, switch to Bob, and show the empty list. Use the negative tests or a prepared UUID to demonstrate that foreign and random records share the same 404 and that denied requests never reach the presigner.
+5. **Security evidence (3 minutes):** show the company-scoped repository query, private-bucket initialization, public response schemas, and the four required regression tests. Mention the clean-clone smoke result and anonymous MinIO 403 checks.
+6. **Tradeoffs and production path (3 minutes):** explain the 5-minute/1-minute expiry choices, why presigned URLs remain bearer capabilities, the development-auth limitation, and the durable queue/worker design.
+7. **AI disclosure and questions (2 minutes):** describe what Codex assisted with, what was verified locally, and what remains a production improvement rather than implying the demo is production-ready.

@@ -384,3 +384,55 @@ file records decisions and evidence that should survive a fresh context.
   and `docker compose ps`. All passed and all services were running; PostgreSQL
   was healthy.
 - Next eligible story: R20 final security review and clean-clone rehearsal.
+
+## 2026-08-24 - R20 technical review awaiting Human Gate C
+
+- Re-read all specifications, story state, and final application code. Protected
+  request routes resolve the company server-side, scope row reads in SQL, read
+  object keys only from authorized rows, and call storage signing only after
+  authorization. The unscoped processing lookup is an internal background task,
+  not a user-controlled request path.
+- Scanned all 24 existing commits for high-confidence access-key, token,
+  private-key, and presigned-signature patterns: zero matches. A separate
+  history filename scan found no `.env`, database, upload image, build output,
+  cache, or runtime artifact. Tracked secret-related strings were reviewed as
+  local placeholders, test values, documentation, or the unused Alembic stub.
+- Found that the earlier `stop tracking local VS Code settings` commit contained
+  a leading-space ignore pattern and had not actually removed the file. Fixed
+  `.vscode/` in `.gitignore` and removed `.vscode/settings.json` from the Git
+  index while preserving the local file on disk.
+- Reviewed the complete commit sequence and mapped every R01-R20 concern to its
+  implementation and progress evidence. R09 initiation and R10 confirmation
+  are the cohesive two halves of commit `7d96ad3`; later security tests cover
+  both flows. No history rewrite was performed.
+- Created a local clone from commit `78f127a`, copied `.env.example` to the
+  ignored `.env`, and started PostgreSQL, MinIO, backend, and frontend with new
+  Docker volumes. The initial migration applied cleanly; backend and frontend
+  returned HTTP 200 and all services remained running with PostgreSQL healthy.
+- In that clean clone, 57 backend tests, Ruff, the frontend production build,
+  `alembic check`, and `pip check` passed. Fresh `npm ci` reported zero known
+  vulnerabilities. Service-log scanning found no credentials or `X-Amz`
+  signed-query material.
+- Ran a real clean-clone MinIO smoke flow using the R18 non-sensitive image.
+  Alice's upload `d054d844-b751-447a-b3f7-2da9eba68507` reached `completed` and
+  downloaded with the same SHA-256. Bob's list body was `[]`; detail, confirm,
+  and download-URL calls returned generic 404 responses identical to a random
+  UUID. Anonymous bucket list and unsigned object GET both returned 403.
+- Rehearsed the browser walkthrough: Alice displayed the completed record, the
+  Bob switch removed all Alice metadata and showed the accessible-empty state,
+  and the browser console contained no warning or error entries. Expanded the
+  README into a timed 15-20 minute walkthrough script.
+- Stopped the clean-clone containers without deleting their volumes, then
+  restored the original project stack and its existing data.
+- Technical R20 checks are complete. `R20`, the global stop condition, and
+  Human Gate C remain open until the user reviews this final diff and approves
+  the final commit/submission state.
+
+## 2026-08-24 - Human Gate C and R20 completion
+
+- The user reviewed the final security, clean-clone, README, and walkthrough
+  evidence and explicitly approved Human Gate C and the R20 commit.
+- Marked R20 passed and the final human gate complete. All R01-R20 stories now
+  pass and the global Ralph stop condition is satisfied.
+- Push remains a separate destructive/external action and was not authorized or
+  performed by this approval.
