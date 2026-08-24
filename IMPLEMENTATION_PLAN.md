@@ -40,7 +40,7 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 
 ## Phase 5 - Browser experience
 
-- [ ] R15: scaffold the typed React API client and development user switch.
+- [x] R15: scaffold the typed React API client and development user switch.
 - [ ] R16: implement direct browser-to-MinIO upload and confirmation.
 - [ ] R17: implement accessible list, status polling, download, and feedback.
 

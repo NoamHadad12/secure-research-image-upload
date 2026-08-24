@@ -273,3 +273,15 @@ file records decisions and evidence that should survive a fresh context.
 - Verified `docker compose up --build -d`, full backend `pytest` (57 passed),
   `ruff check .`, frontend `npm run build`, and healthy Compose services.
 - Next eligible story: R15.
+
+## 2026-08-24 - R15 typed frontend API client and development user switch
+
+- Added a typed frontend API client that binds every request to the selected
+  development user's `X-User-ID`; it never sends a company ID or storage key.
+- Added an accessible Alice/Hospital A and Bob/Hospital B radio switch. Switching
+  immediately clears the prior tenant's in-memory records, cancels an outdated
+  request, and refreshes records for the newly selected user.
+- Verified the TypeScript/Vite production build and browser behavior: Alice
+  showed six accessible records, Bob showed zero, and switching back restored
+  Alice's six-record result without stale Hospital A data while Bob was active.
+- Next eligible story: R16.

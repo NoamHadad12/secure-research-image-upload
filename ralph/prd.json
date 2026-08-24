@@ -240,7 +240,7 @@
       ],
       "checks": ["TypeScript build passes", "User switch verified in browser"],
       "commitMessage": "feat: add typed API client and development user switch",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
