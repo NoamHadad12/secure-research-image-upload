@@ -306,7 +306,7 @@
       ],
       "checks": ["Every assignment README item maps to a heading", "Commands are rerun from documentation"],
       "commitMessage": "docs: explain setup architecture security and AI verification",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

@@ -47,8 +47,8 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 ## Phase 6 - Integrated evidence and handoff
 
 - [x] R18: verify the live Hospital A success and Hospital B denial flows.
-- [ ] Human Gate B: inspect the first full end-to-end flow.
-- [ ] R19: write the complete README and AI verification disclosure.
+- [x] Human Gate B: inspect the first full end-to-end flow.
+- [x] R19: write the complete README and AI verification disclosure.
   - Include a maintained data-model diagram derived from the final PostgreSQL
     schema, showing that image bytes remain in MinIO rather than the database.
 - [ ] R20: perform final security review and clean-clone rehearsal.

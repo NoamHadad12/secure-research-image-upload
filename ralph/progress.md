@@ -358,3 +358,29 @@ file records decisions and evidence that should survive a fresh context.
   valid Compose configuration, and all four services running with PostgreSQL
   healthy. No product-code change was needed for R18.
 - Next step: Human Gate B. R19 remains blocked on that manual approval.
+
+## 2026-08-24 - Human Gate B and R19 complete assignment README
+
+- The user approved the R18 evidence and commit, then explicitly instructed the
+  work to continue to the next subtask. This records Human Gate B as approved.
+- Replaced the placeholder README with an English assignment handoff. Each of
+  the 13 requested documentation topics maps to its own numbered heading.
+- Added a Mermaid data-model diagram derived from the final PostgreSQL schema.
+  It distinguishes the three database tables from the MinIO object that holds
+  the actual image bytes.
+- Documented the exact setup and validation commands, development identities,
+  API surface, metadata validation, upload and download authorization flows,
+  5-minute PUT and 1-minute GET expiry choices, and private-bucket behavior.
+- Documented honest boundaries: the forgeable development identity header,
+  bearer and reusable-until-expiry nature of presigned URLs, local MinIO root
+  credentials, non-durable FastAPI background processing, and abandoned
+  `pending_upload` cleanup as production work.
+- Disclosed OpenAI Codex with GPT-5, what it assisted with, what local evidence
+  was reviewed, and that the final clean-clone and history/secret audit remains
+  a separate R20 gate.
+- Reran the commands exactly as documented: `docker compose config`,
+  `docker compose up --build -d`, backend `pytest` (57 passed), backend
+  `ruff check .`, frontend `npm run build`, the documented backend import check,
+  and `docker compose ps`. All passed and all services were running; PostgreSQL
+  was healthy.
+- Next eligible story: R20 final security review and clean-clone rehearsal.
