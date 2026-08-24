@@ -316,3 +316,45 @@ file records decisions and evidence that should survive a fresh context.
   records and downloaded a confirmed image; Bob saw the accessible-empty state
   with none of Alice's record metadata.
 - Next eligible story: R18.
+
+## 2026-08-24 - R18 live MinIO tenant-isolation flow
+
+- Used the real browser UI as Alice/Hospital A to upload the non-sensitive
+  `r18-live-smoke.png` fixture (2,082,509 bytes, SHA-256
+  `246623C14C589757FEC414AECD254C53233397FC76A27F31D5CCCD2B059E95BC`) with
+  sample ID `r18-live-smoke-20260824` and classification `restricted`.
+- The browser completed the presigned PUT and confirmation, displayed the
+  `uploaded` response, then visibly showed `processing` and `completed`. A
+  browser download event was observed for the completed record. A second owner
+  download contained 2,082,509 bytes and matched the fixture SHA-256 exactly.
+- The created upload ID was `0d0dce5e-bb89-4223-8ab1-be9d795b1b68`. Switching
+  the UI to Bob/Hospital B cleared Alice's metadata and showed the accessible
+  empty state. Bob's API list contained zero records and no matching upload or
+  sample metadata.
+- Bob's detail, confirmation, and download-URL requests for Alice's upload all
+  returned `404` with exactly
+  `{"error":{"code":"not_found","message":"Upload not found"}}`. A random
+  UUID returned the same detail status and body.
+- Anonymous MinIO bucket listing and a direct unsigned GET for the exact object
+  path both returned `403`; no bucket policy, object bytes, or metadata leaked.
+- Exact terminal checks used after the browser flow:
+
+  ```powershell
+  $bobHeaders = @{"X-User-ID" = "00000000-0000-0000-0000-0000000000b2"}
+  $uploadId = "0d0dce5e-bb89-4223-8ab1-be9d795b1b68"
+  Invoke-WebRequest -SkipHttpErrorCheck -Uri "http://localhost:8000/api/uploads/$uploadId" -Headers $bobHeaders
+  Invoke-WebRequest -SkipHttpErrorCheck -Method Post -Uri "http://localhost:8000/api/uploads/$uploadId/confirm" -Headers $bobHeaders
+  Invoke-WebRequest -SkipHttpErrorCheck -Method Post -Uri "http://localhost:8000/api/uploads/$uploadId/download-url" -Headers $bobHeaders
+  Invoke-WebRequest -SkipHttpErrorCheck -Uri "http://localhost:9000/research-images?list-type=2"
+  Invoke-WebRequest -SkipHttpErrorCheck -Uri "http://localhost:9000/research-images/uploads/00000000-0000-0000-0000-0000000000a1/$uploadId/r18-live-smoke.png"
+  docker compose config
+  docker compose exec backend pytest
+  docker compose exec backend ruff check .
+  docker compose exec frontend npm run build
+  docker compose ps
+  ```
+
+- Final checks passed: 57 backend tests, Ruff, the production frontend build,
+  valid Compose configuration, and all four services running with PostgreSQL
+  healthy. No product-code change was needed for R18.
+- Next step: Human Gate B. R19 remains blocked on that manual approval.

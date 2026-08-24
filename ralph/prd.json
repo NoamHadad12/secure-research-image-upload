@@ -289,7 +289,7 @@
       ],
       "checks": ["Live smoke flow passes", "docker compose ps is healthy"],
       "commitMessage": "test: verify live MinIO tenant isolation flow",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

@@ -46,7 +46,7 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 
 ## Phase 6 - Integrated evidence and handoff
 
-- [ ] R18: verify the live Hospital A success and Hospital B denial flows.
+- [x] R18: verify the live Hospital A success and Hospital B denial flows.
 - [ ] Human Gate B: inspect the first full end-to-end flow.
 - [ ] R19: write the complete README and AI verification disclosure.
   - Include a maintained data-model diagram derived from the final PostgreSQL
