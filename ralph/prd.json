@@ -176,7 +176,7 @@
       ],
       "checks": ["Processor success and failure tests pass"],
       "commitMessage": "feat: simulate research image processing lifecycle",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

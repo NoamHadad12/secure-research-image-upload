@@ -92,7 +92,7 @@ def make_client(postgres_engine: Engine, storage: FakeObjectStorage) -> TestClie
     return TestClient(app)
 
 
-def test_valid_object_is_confirmed_with_postgresql_and_is_idempotent(
+def test_confirmed_object_starts_background_processing_and_is_idempotent(
     postgres_engine: Engine,
     create_pending_upload: Callable[..., Upload],
 ) -> None:
@@ -115,14 +115,14 @@ def test_valid_object_is_confirmed_with_postgresql_and_is_idempotent(
     assert first_response.status_code == 200
     assert first_response.json() == {"upload_id": str(upload.id), "status": "uploaded"}
     assert repeated_response.status_code == 200
-    assert repeated_response.json() == first_response.json()
+    assert repeated_response.json() == {"upload_id": str(upload.id), "status": "completed"}
     assert storage.stat_calls == [upload.object_key]
 
     with Session(postgres_engine) as session:
         confirmed_upload = session.get(Upload, upload.id)
 
     assert confirmed_upload is not None
-    assert confirmed_upload.status is UploadStatus.UPLOADED
+    assert confirmed_upload.status is UploadStatus.COMPLETED
     assert confirmed_upload.size_bytes == 512
     assert confirmed_upload.etag == "confirmed-etag"
 

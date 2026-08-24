@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import timedelta
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi import BackgroundTasks, Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -15,6 +15,7 @@ from app.db import SessionFactory, create_session_factory, get_db_session
 from app.errors import error_response
 from app.identity import CurrentUser, get_current_user, seed_development_identities
 from app.models import Upload, UploadStatus
+from app.processing import process_confirmed_upload
 from app.schemas import HealthResponse, UploadConfirmationResponse, UploadInitiationResponse
 from app.storage import MinioStorage, ObjectMissingError, ObjectStorage
 from app.upload_metadata import UploadInitiationMetadata, build_object_key
@@ -196,6 +197,7 @@ def create_app(
     )
     def confirm_upload(
         upload_id: UUID,
+        background_tasks: BackgroundTasks,
         current_user: CurrentUser = Depends(get_current_user),
         session: Session = Depends(get_db_session),
         storage: ObjectStorage = Depends(get_object_storage),
@@ -210,7 +212,12 @@ def create_app(
         if upload is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
 
-        if upload.status is UploadStatus.UPLOADED:
+        if upload.status in {
+            UploadStatus.UPLOADED,
+            UploadStatus.QUEUED,
+            UploadStatus.PROCESSING,
+            UploadStatus.COMPLETED,
+        }:
             return UploadConfirmationResponse(upload_id=upload.id, status=upload.status.value)
         if upload.status is not UploadStatus.PENDING_UPLOAD:
             raise HTTPException(
@@ -240,6 +247,11 @@ def create_app(
         except Exception:
             session.rollback()
             raise
+
+        session_factory: SessionFactory | None = app.state.session_factory
+        if session_factory is None:
+            raise RuntimeError("Database session factory is not configured")
+        background_tasks.add_task(process_confirmed_upload, session_factory, upload.id)
 
         return UploadConfirmationResponse(upload_id=upload.id, status=upload.status.value)
 

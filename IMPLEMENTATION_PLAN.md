@@ -28,7 +28,9 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 - [x] R08: validate initiation metadata and generate safe object keys.
 - [x] R09: persist pending records and issue presigned PUT URLs.
 - [x] R10: confirm uploads using authorized rows and MinIO object stat.
-- [ ] R11: simulate queued/processing/completed/failed transitions.
+- [x] R11: simulate queued/processing/completed/failed transitions.
+  - The local in-process task is intentionally non-durable; R19 must document
+    that production needs a queue, worker, retries, and dead-letter handling.
 
 ## Phase 4 - Access and download
 

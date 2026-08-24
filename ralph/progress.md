@@ -209,3 +209,18 @@ file records decisions and evidence that should survive a fresh context.
   each generated test row. A fake storage adapter proves authorization precedes
   storage and avoids real MinIO bytes until R18.
 - Next eligible story: R11.
+
+## 2026-08-24 - R11 local processing lifecycle
+
+- Confirmation now schedules an in-process FastAPI background task only after
+  the `uploaded` transaction commits. The task receives an upload ID and opens
+  its own PostgreSQL session; it never reuses the request session.
+- The simulator commits `queued`, `processing`, and `completed` transitions.
+  A processor exception rolls back its failed operation then records `failed`.
+- PostgreSQL-backed tests verify every transition, independent background
+  session creation, and the failure path. The existing confirmation test now
+  verifies that confirmation starts this background lifecycle.
+- This local task is deliberately non-durable. Production requires a queue,
+  separate worker, idempotency, retries, timeouts, and dead-letter handling;
+  the R19 README must describe that limitation.
+- Next eligible story: R12.
