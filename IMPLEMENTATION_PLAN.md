@@ -36,7 +36,7 @@ story state. Product implementation is in progress on the tracked `dev` branch.
 
 - [x] R12: expose tenant-scoped list and detail routes.
 - [x] R13: authorize and issue short-lived presigned GET URLs.
-- [ ] R14: complete required and high-value security tests.
+- [x] R14: complete required and high-value security tests.
 
 ## Phase 5 - Browser experience
 

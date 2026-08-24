@@ -257,3 +257,19 @@ file records decisions and evidence that should survive a fresh context.
 - Verified `docker compose up --build -d`, full backend `pytest` (49 passed),
   `ruff check .`, frontend `npm run build`, and healthy Compose services.
 - Next eligible story: R14.
+
+## 2026-08-24 - R14 API security regression suite
+
+- Added a dedicated assignment-regression suite with explicit, clearly named
+  tests for all four required scenarios: Hospital A creation and access,
+  Hospital B record denial, Hospital B download-URL denial, and invalid or
+  missing initiation metadata rejection.
+- The suite asserts that Hospital B's foreign and random IDs return the exact
+  same 404 response, and that a denied download request never calls the GET
+  presigner.
+- Metadata validation coverage now explicitly rejects client attempts to supply
+  `company_id`, `object_key`, or both, without persisting a row or generating a
+  PUT URL.
+- Verified `docker compose up --build -d`, full backend `pytest` (57 passed),
+  `ruff check .`, frontend `npm run build`, and healthy Compose services.
+- Next eligible story: R15.

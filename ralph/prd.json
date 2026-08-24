@@ -224,7 +224,7 @@
       ],
       "checks": ["pytest passes", "ruff check passes"],
       "commitMessage": "test: cover tenant isolation and upload validation",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {
