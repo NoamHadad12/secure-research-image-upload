@@ -256,7 +256,7 @@
       ],
       "checks": ["Frontend build passes", "Real browser upload creates a MinIO object"],
       "commitMessage": "feat: implement direct browser-to-MinIO upload flow",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

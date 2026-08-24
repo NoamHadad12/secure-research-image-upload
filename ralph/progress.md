@@ -285,3 +285,19 @@ file records decisions and evidence that should survive a fresh context.
   showed six accessible records, Bob showed zero, and switching back restored
   Alice's six-record result without stale Hospital A data while Bob was active.
 - Next eligible story: R16.
+
+## 2026-08-24 - R16 direct browser upload and confirmation
+
+- Added a controlled upload form for sample ID, classification, and an allowlisted
+  PNG/JPEG/WebP image. It sends only metadata to the backend and never exposes
+  object keys or storage credentials in the UI.
+- The browser requests a short-lived PUT URL, uploads image bytes directly to
+  MinIO with the file MIME type, then confirms the upload using only its upload
+  ID. Errors leave form values available for a retry and use safe feedback.
+- Verified the production frontend build and a live browser flow with a temporary
+  non-sensitive PNG: Alice's accessible-record count advanced from six to seven
+  after MinIO upload and backend confirmation returned `uploaded`.
+- Verified initiation-error feedback with a whitespace sample ID: the backend
+  rejected the request before signing, the UI displayed `Request validation failed`,
+  and the upload button remained enabled for retry.
+- Next eligible story: R17.

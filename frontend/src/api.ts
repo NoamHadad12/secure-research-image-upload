@@ -1,4 +1,9 @@
-import type { UploadRecord } from "./types";
+import type {
+  UploadConfirmation,
+  UploadInitiation,
+  UploadInitiationMetadata,
+  UploadRecord,
+} from "./types";
 
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000").replace(
   /\/$/,
@@ -20,6 +25,11 @@ export class ApiError extends Error {
 
 export type ApiClient = {
   listUploads(signal?: AbortSignal): Promise<UploadRecord[]>;
+  initiateUpload(
+    metadata: UploadInitiationMetadata,
+    signal?: AbortSignal,
+  ): Promise<UploadInitiation>;
+  confirmUpload(uploadId: string, signal?: AbortSignal): Promise<UploadConfirmation>;
 };
 
 function readErrorMessage(body: unknown): string {
@@ -41,10 +51,24 @@ function readErrorMessage(body: unknown): string {
  * to a company and remains the sole authorization authority.
  */
 export function createApiClient(developmentUserId: string): ApiClient {
-  async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
+  async function request<T>(
+    path: string,
+    options: {
+      body?: unknown;
+      method?: "GET" | "POST";
+      signal?: AbortSignal;
+    } = {},
+  ): Promise<T> {
+    const headers: Record<string, string> = { "X-User-ID": developmentUserId };
+    if (options.body !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(`${apiBaseUrl}${path}`, {
-      headers: { "X-User-ID": developmentUserId },
-      signal,
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      headers,
+      method: options.method ?? "GET",
+      signal: options.signal,
     });
 
     if (!response.ok) {
@@ -61,6 +85,17 @@ export function createApiClient(developmentUserId: string): ApiClient {
   }
 
   return {
-    listUploads: (signal) => request<UploadRecord[]>("/api/uploads", signal),
+    listUploads: (signal) => request<UploadRecord[]>("/api/uploads", { signal }),
+    initiateUpload: (metadata, signal) =>
+      request<UploadInitiation>("/api/uploads/initiate", {
+        body: metadata,
+        method: "POST",
+        signal,
+      }),
+    confirmUpload: (uploadId, signal) =>
+      request<UploadConfirmation>(`/api/uploads/${uploadId}/confirm`, {
+        method: "POST",
+        signal,
+      }),
   };
 }
