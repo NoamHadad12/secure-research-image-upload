@@ -16,10 +16,15 @@ from app.errors import error_response
 from app.identity import CurrentUser, get_current_user, seed_development_identities
 from app.models import Upload, UploadStatus
 from app.processing import process_confirmed_upload
-from app.schemas import HealthResponse, UploadConfirmationResponse, UploadInitiationResponse
+from app.schemas import (
+    HealthResponse,
+    UploadConfirmationResponse,
+    UploadInitiationResponse,
+    UploadRecordResponse,
+)
 from app.storage import MinioStorage, ObjectMissingError, ObjectStorage
 from app.upload_metadata import UploadInitiationMetadata, build_object_key
-from app.upload_repository import add_upload, get_upload_for_company
+from app.upload_repository import add_upload, get_upload_for_company, list_uploads_for_company
 
 PRESIGNED_UPLOAD_URL_EXPIRY = timedelta(minutes=5)
 
@@ -254,6 +259,58 @@ def create_app(
         background_tasks.add_task(process_confirmed_upload, session_factory, upload.id)
 
         return UploadConfirmationResponse(upload_id=upload.id, status=upload.status.value)
+
+    @app.get(
+        "/api/uploads",
+        response_model=list[UploadRecordResponse],
+        tags=["uploads"],
+    )
+    def list_uploads(
+        current_user: CurrentUser = Depends(get_current_user),
+        session: Session = Depends(get_db_session),
+    ) -> list[UploadRecordResponse]:
+        """List only metadata records owned by the current user's company."""
+
+        return [
+            UploadRecordResponse(
+                upload_id=upload.id,
+                sample_id=upload.sample_id,
+                filename=upload.original_filename,
+                classification=upload.classification,
+                status=upload.status.value,
+                created_at=upload.created_at,
+            )
+            for upload in list_uploads_for_company(session, company_id=current_user.company_id)
+        ]
+
+    @app.get(
+        "/api/uploads/{upload_id}",
+        response_model=UploadRecordResponse,
+        tags=["uploads"],
+    )
+    def get_upload(
+        upload_id: UUID,
+        current_user: CurrentUser = Depends(get_current_user),
+        session: Session = Depends(get_db_session),
+    ) -> UploadRecordResponse:
+        """Return an owned record or the generic not-found response."""
+
+        upload = get_upload_for_company(
+            session,
+            upload_id=upload_id,
+            company_id=current_user.company_id,
+        )
+        if upload is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
+
+        return UploadRecordResponse(
+            upload_id=upload.id,
+            sample_id=upload.sample_id,
+            filename=upload.original_filename,
+            classification=upload.classification,
+            status=upload.status.value,
+            created_at=upload.created_at,
+        )
 
     return app
 

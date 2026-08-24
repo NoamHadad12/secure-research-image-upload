@@ -224,3 +224,20 @@ file records decisions and evidence that should survive a fresh context.
   separate worker, idempotency, retries, timeouts, and dead-letter handling;
   the R19 README must describe that limitation.
 - Next eligible story: R12.
+
+## 2026-08-24 - R12 tenant-scoped upload access routes
+
+- Added `GET /api/uploads` and `GET /api/uploads/{upload_id}`. Both resolve the
+  current user server-side and pass only that user's company ID into the
+  repository's SQL-scoped reads.
+- Public record responses include the required user-facing metadata (upload ID,
+  sample ID, filename, classification, status, and created timestamp) while
+  omitting the object key, company ID, ETag, size, and all storage details.
+- Foreign and nonexistent detail IDs both return the same generic `404 Upload
+  not found` response; Hospital B's list contains only Hospital B records.
+- Added API coverage for Hospital A owner list/detail success, Hospital B list
+  isolation, and foreign/nonexistent error equivalence.
+- Verified `docker compose config`, `docker compose up --build -d`, full backend
+  `pytest` (45 passed), `ruff check .`, frontend `npm run build`, and healthy
+  Compose services.
+- Next eligible story: R13.

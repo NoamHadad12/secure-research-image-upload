@@ -1,5 +1,6 @@
 """Public API response schemas that contain no storage or credential details."""
 
+from datetime import datetime
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -22,3 +23,14 @@ class UploadConfirmationResponse(BaseModel):
 
     upload_id: UUID
     status: str
+
+
+class UploadRecordResponse(BaseModel):
+    """Tenant-visible upload metadata, deliberately excluding the object key."""
+
+    upload_id: UUID
+    sample_id: str
+    filename: str
+    classification: str
+    status: str
+    created_at: datetime
