@@ -475,3 +475,26 @@ file records decisions and evidence that should survive a fresh context.
   checks.
 - R21 is complete. The change is intentionally left uncommitted pending the
   user's separate commit approval.
+
+## 2026-08-24 - R22 lightweight UI polish and development identity rename
+
+- Added a restrained responsive interface with a clearer security-demo header,
+  tenant-switch explanation, active-workspace summary, structured upload form,
+  record cards, status badges, feedback panels, and mobile layout. The upload,
+  refresh, polling, download, and accessibility behavior remains unchanged.
+- Renamed the stable development identities to Dana at Hospital A and David at
+  Hospital B across the frontend, backend seed, product specification, tests,
+  and current README instructions. Their existing UUIDs and company ownership
+  did not change.
+- Updated seeding so a pre-existing local database safely adopts the new display
+  names only when each stable user ID still belongs to its expected company. A
+  company mismatch continues to fail closed. The live database contains exactly
+  Dana/Hospital A and David/Hospital B.
+- Verified the responsive interface in a real browser at desktop and 390px
+  viewport widths. David displayed only Hospital B's single `uj.png` record;
+  switching back restored Dana's six Hospital A records with no stale cross-
+  company metadata. The browser console contained no warnings or errors.
+- Validation passed: Compose configuration and service status, 58 backend tests,
+  Ruff, the frontend production build, and the real-browser identity-switch and
+  tenant-isolation checks.
+- R22 is complete. All R01-R22 stories pass.

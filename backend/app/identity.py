@@ -13,8 +13,8 @@ from app.models import Company, User
 
 HOSPITAL_A_ID = UUID("00000000-0000-0000-0000-0000000000a1")
 HOSPITAL_B_ID = UUID("00000000-0000-0000-0000-0000000000b1")
-ALICE_ID = UUID("00000000-0000-0000-0000-0000000000a2")
-BOB_ID = UUID("00000000-0000-0000-0000-0000000000b2")
+DANA_ID = UUID("00000000-0000-0000-0000-0000000000a2")
+DAVID_ID = UUID("00000000-0000-0000-0000-0000000000b2")
 
 
 @dataclass(frozen=True)
@@ -57,8 +57,13 @@ def _ensure_user(
         )
         return
 
-    if existing.display_name != display_name or existing.company_id != company_id:
+    if existing.company_id != company_id:
         raise RuntimeError("Development user ID is already assigned to a different identity")
+
+    # Display names are presentation data. Keep the stable seeded ID and company
+    # ownership while allowing an existing local database to adopt a renamed demo user.
+    if existing.display_name != display_name:
+        existing.display_name = display_name
 
 
 def seed_development_identities(session: Session) -> None:
@@ -70,14 +75,14 @@ def seed_development_identities(session: Session) -> None:
 
     _ensure_user(
         session,
-        user_id=ALICE_ID,
-        display_name="Alice",
+        user_id=DANA_ID,
+        display_name="Dana",
         company_id=HOSPITAL_A_ID,
     )
     _ensure_user(
         session,
-        user_id=BOB_ID,
-        display_name="Bob",
+        user_id=DAVID_ID,
+        display_name="David",
         company_id=HOSPITAL_B_ID,
     )
     session.flush()

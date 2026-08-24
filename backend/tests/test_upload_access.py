@@ -11,7 +11,13 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings
 from app.db import Base
-from app.identity import ALICE_ID, BOB_ID, HOSPITAL_A_ID, HOSPITAL_B_ID, seed_development_identities
+from app.identity import (
+    DANA_ID,
+    DAVID_ID,
+    HOSPITAL_A_ID,
+    HOSPITAL_B_ID,
+    seed_development_identities,
+)
 from app.main import create_app
 from app.models import Upload, UploadStatus
 
@@ -85,10 +91,10 @@ def test_hospital_a_can_list_and_retrieve_its_own_public_upload_metadata(
     client = _make_client(session_factory)
 
     with client:
-        list_response = client.get("/api/uploads", headers={"X-User-ID": str(ALICE_ID)})
+        list_response = client.get("/api/uploads", headers={"X-User-ID": str(DANA_ID)})
         detail_response = client.get(
             f"/api/uploads/{hospital_a_upload.id}",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
 
     assert list_response.status_code == 200
@@ -114,14 +120,14 @@ def test_hospital_b_cannot_list_or_retrieve_hospital_a_metadata(
     client = _make_client(session_factory)
 
     with client:
-        list_response = client.get("/api/uploads", headers={"X-User-ID": str(BOB_ID)})
+        list_response = client.get("/api/uploads", headers={"X-User-ID": str(DAVID_ID)})
         foreign_response = client.get(
             f"/api/uploads/{hospital_a_upload.id}",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
         absent_response = client.get(
             f"/api/uploads/{uuid4()}",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
 
     assert list_response.status_code == 200

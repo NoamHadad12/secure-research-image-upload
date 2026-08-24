@@ -11,7 +11,12 @@ from sqlalchemy import Engine, create_engine, delete
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings
-from app.identity import ALICE_ID, BOB_ID, HOSPITAL_A_ID, seed_development_identities
+from app.identity import (
+    DANA_ID,
+    DAVID_ID,
+    HOSPITAL_A_ID,
+    seed_development_identities,
+)
 from app.main import create_app
 from app.models import Upload, UploadStatus
 from app.storage import ObjectMissingError, ObjectStat
@@ -105,11 +110,11 @@ def test_confirmed_object_starts_background_processing_and_is_idempotent(
     with client:
         first_response = client.post(
             f"/api/uploads/{upload.id}/confirm",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
         repeated_response = client.post(
             f"/api/uploads/{upload.id}/confirm",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
 
     assert first_response.status_code == 200
@@ -145,7 +150,7 @@ def test_missing_empty_or_oversized_object_cannot_be_confirmed(
     with client:
         response = client.post(
             f"/api/uploads/{upload.id}/confirm",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
 
     assert response.status_code == 409
@@ -177,11 +182,11 @@ def test_foreign_and_absent_confirmation_share_a_404_without_storage_access(
     with client:
         foreign_response = client.post(
             f"/api/uploads/{hospital_a_upload.id}/confirm",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
         absent_response = client.post(
             f"/api/uploads/{uuid4()}/confirm",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
 
     assert foreign_response.status_code == 404

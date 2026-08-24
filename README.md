@@ -14,7 +14,7 @@ The application is intentionally narrow: Hospital A can upload, list, inspect, a
 - Private MinIO object storage for image bytes
 - SQLAlchemy 2 and Alembic for persistence and migrations
 - Short-lived presigned URLs: 5 minutes for upload and 1 minute for download
-- Development identities for Alice at Hospital A and Bob at Hospital B
+- Development identities for Dana at Hospital A and David at Hospital B
 
 The browser never receives MinIO credentials, never supplies a company ID, and never chooses an object key. The backend resolves the company from the development user identity and generates keys in this form:
 
@@ -59,7 +59,7 @@ docker compose up --build -d
 docker compose ps
 ```
 
-Open [http://localhost:5173](http://localhost:5173). Select Alice or Bob with the development user switch. The API health endpoint is [http://localhost:8000/health](http://localhost:8000/health), and local API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs).
+Open [http://localhost:5173](http://localhost:5173). Select Dana or David with the development user switch. The API health endpoint is [http://localhost:8000/health](http://localhost:8000/health), and local API documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs).
 
 To inspect logs:
 
@@ -106,7 +106,7 @@ docker compose exec backend ruff check .
 docker compose exec frontend npm run build
 ```
 
-The backend suite currently contains 57 tests. It includes the four required cases:
+The backend suite currently contains 58 tests. It includes the four required cases:
 
 1. Hospital A can create and access its own upload record.
 2. Hospital B is denied access to Hospital A's upload record.
@@ -184,7 +184,7 @@ The database stores only the generated object key and verified object facts such
 
 ## 6. Upload flow and presigned URL lifecycle
 
-1. The user selects Alice or Bob, enters a sample ID and classification, and chooses a PNG, JPEG, or WebP image of at most 10 MiB.
+1. The user selects Dana or David, enters a sample ID and classification, and chooses a PNG, JPEG, or WebP image of at most 10 MiB.
 2. The browser sends only `sample_id`, `filename`, `classification`, and `content_type` to `POST /api/uploads/initiate`, together with the development `X-User-ID` header.
 3. The backend resolves the user and company, validates the metadata, allocates an upload UUID, sanitizes the filename, and generates the company-scoped object key. Client-supplied `company_id`, `object_key`, or other extra fields are rejected.
 4. The backend creates a `pending_upload` row and returns a presigned MinIO `PUT` URL valid for 5 minutes.
@@ -203,7 +203,7 @@ The URL is a time-limited bearer capability, not a one-time token. It can be reu
 4. Only after authorization succeeds does the backend read the object key from the row and create a presigned MinIO `GET` URL valid for 1 minute.
 5. The browser downloads the bytes directly from MinIO.
 
-List and detail routes use the same company scope. Hospital B therefore cannot list, inspect, confirm, or request a download URL for a Hospital A upload, even if Bob knows the upload UUID or object key. An unsigned request to the MinIO bucket remains forbidden.
+List and detail routes use the same company scope. Hospital B therefore cannot list, inspect, confirm, or request a download URL for a Hospital A upload, even if David knows the upload UUID or object key. An unsigned request to the MinIO bucket remains forbidden.
 
 ## 8. Why presigned URLs are safer than exposing MinIO credentials
 
@@ -248,9 +248,9 @@ In production, confirmation would commit `uploaded` and enqueue an upload ID—p
 
 OpenAI Codex, powered by GPT-5, was used to help decompose the assignment, review security invariants, implement and review code and tests, drive local Docker/browser checks, and draft documentation. AI assistance was not treated as proof that the system worked.
 
-I retained control over engineering decisions and commit approval, reviewed the produced diffs and evidence, and approved the first complete end-to-end gate. In the local environment, Codex executed the repeatable checks while I reviewed the results: all 57 backend tests passed, Ruff passed, the production frontend build passed, and Docker Compose reported all services running. The browser-to-MinIO flow was exercised with a real image: Alice uploaded and downloaded matching bytes, Bob received the same generic 404 response for Alice's upload as for a random UUID, and unsigned MinIO list/read attempts returned 403.
+I retained control over engineering decisions and commit approval, reviewed the produced diffs and evidence, and approved the first complete end-to-end gate. In the local environment, Codex executed the repeatable checks while I reviewed the results: all 57 backend tests passed, Ruff passed, the production frontend build passed, and Docker Compose reported all services running. The browser-to-MinIO flow was exercised with a real image: the Hospital A identity uploaded and downloaded matching bytes, the Hospital B identity received the same generic 404 response for that upload as for a random UUID, and unsigned MinIO list/read attempts returned 403.
 
-The final clean-clone rehearsal and secret/history review were completed locally on 24 August 2026. A fresh clone using `.env.example` and new Docker volumes applied its migration, passed all 57 backend tests, Ruff, Alembic drift detection, Python dependency consistency, and the frontend production build. Its real MinIO smoke flow also reproduced Alice's byte-identical owner download, Bob's generic denials, and anonymous-storage 403 responses. Human Gate C approved the final diff and submission readiness after reviewing this evidence.
+The final clean-clone rehearsal and secret/history review were completed locally on 24 August 2026. A fresh clone using `.env.example` and new Docker volumes applied its migration, passed all 57 backend tests, Ruff, Alembic drift detection, Python dependency consistency, and the frontend production build. Its real MinIO smoke flow also reproduced the Hospital A identity's byte-identical owner download, the Hospital B identity's generic denials, and anonymous-storage 403 responses. Human Gate C approved the final diff and submission readiness after reviewing this evidence.
 
 ## Development identities and API surface
 
@@ -258,8 +258,8 @@ The UI provides these seeded users:
 
 | User | User ID | Company |
 | --- | --- | --- |
-| Alice | `00000000-0000-0000-0000-0000000000a2` | Hospital A |
-| Bob | `00000000-0000-0000-0000-0000000000b2` | Hospital B |
+| Dana | `00000000-0000-0000-0000-0000000000a2` | Hospital A |
+| David | `00000000-0000-0000-0000-0000000000b2` | Hospital B |
 
 The frontend sends the chosen ID in `X-User-ID`. The backend resolves the matching database user and never accepts a company ID from the client.
 
@@ -276,8 +276,8 @@ The frontend sends the chosen ID in `X-User-ID`. The backend resolves the matchi
 
 1. **Problem and architecture (2 minutes):** state the Hospital A/Hospital B isolation invariant, then show the browser → FastAPI/PostgreSQL path for metadata and the browser → MinIO path for presigned file bytes.
 2. **Data and trust boundaries (3 minutes):** show the Mermaid model, the server-resolved development identity, the strict request schema, and the generated `uploads/{company}/{upload}/{filename}` key. Explain that the signed URL contains the key but the browser never chooses it.
-3. **Alice upload (4 minutes):** select Alice, upload a valid image, and narrate initiate → direct PUT → confirm → object stat → processing. Point out that transient status values may advance quickly.
-4. **Owner download and Bob denial (3 minutes):** download as Alice, switch to Bob, and show the empty list. Use the negative tests or a prepared UUID to demonstrate that foreign and random records share the same 404 and that denied requests never reach the presigner.
+3. **Dana upload (4 minutes):** select Dana, upload a valid image, and narrate initiate → direct PUT → confirm → object stat → processing. Point out that transient status values may advance quickly.
+4. **Owner download and David denial (3 minutes):** download as Dana, switch to David, and show the empty list. Use the negative tests or a prepared UUID to demonstrate that foreign and random records share the same 404 and that denied requests never reach the presigner.
 5. **Security evidence (3 minutes):** show the company-scoped repository query, private-bucket initialization, public response schemas, and the four required regression tests. Mention the clean-clone smoke result and anonymous MinIO 403 checks.
 6. **Tradeoffs and production path (3 minutes):** explain the 5-minute/1-minute expiry choices, why presigned URLs remain bearer capabilities, the development-auth limitation, and the durable queue/worker design.
 7. **AI disclosure and questions (2 minutes):** describe what Codex assisted with, what was verified locally, and what remains a production improvement rather than implying the demo is production-ready.

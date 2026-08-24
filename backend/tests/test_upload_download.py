@@ -12,7 +12,12 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings
 from app.db import Base
-from app.identity import ALICE_ID, BOB_ID, HOSPITAL_A_ID, seed_development_identities
+from app.identity import (
+    DANA_ID,
+    DAVID_ID,
+    HOSPITAL_A_ID,
+    seed_development_identities,
+)
 from app.main import PRESIGNED_DOWNLOAD_URL_EXPIRY, create_app
 from app.models import Upload, UploadStatus
 
@@ -93,7 +98,7 @@ def test_hospital_a_can_get_a_one_minute_download_url_for_a_confirmed_upload(
     with client:
         response = client.post(
             f"/api/uploads/{upload.id}/download-url",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
 
     assert response.status_code == 200
@@ -115,11 +120,11 @@ def test_hospital_b_cannot_get_a_download_url_for_hospital_a_upload(
     with client:
         foreign_response = client.post(
             f"/api/uploads/{upload.id}/download-url",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
         absent_response = client.post(
             f"/api/uploads/{uuid4()}/download-url",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
 
     assert foreign_response.status_code == absent_response.status_code == 404
@@ -139,7 +144,7 @@ def test_pending_upload_cannot_receive_a_download_url(
     with client:
         response = client.post(
             f"/api/uploads/{upload.id}/download-url",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
 
     assert response.status_code == 409

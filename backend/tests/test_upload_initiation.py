@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.config import Settings
 from app.db import Base
-from app.identity import ALICE_ID, HOSPITAL_A_ID
+from app.identity import DANA_ID, HOSPITAL_A_ID
 from app.main import PRESIGNED_UPLOAD_URL_EXPIRY, create_app
 from app.models import Upload, UploadStatus
 
@@ -76,7 +76,7 @@ def test_hospital_a_initiation_creates_pending_upload_and_returns_only_public_va
         response = client.post(
             "/api/uploads/initiate",
             headers={
-                "X-User-ID": str(ALICE_ID),
+                "X-User-ID": str(DANA_ID),
                 "X-Company-ID": "00000000-0000-0000-0000-0000000000b1",
             },
             json=initiation_payload(),
@@ -110,7 +110,7 @@ def test_invalid_initiation_metadata_is_rejected_before_storage_or_persistence(
     with client:
         response = client.post(
             "/api/uploads/initiate",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
             json=initiation_payload(object_key="uploads/forged/object.png"),
         )
 

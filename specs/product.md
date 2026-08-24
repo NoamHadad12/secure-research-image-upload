@@ -9,8 +9,8 @@ and Hospital B.
 
 ## Development identities
 
-- Alice belongs to Hospital A.
-- Bob belongs to Hospital B.
+- Dana belongs to Hospital A.
+- David belongs to Hospital B.
 - The UI may switch between seeded users.
 - Requests identify the selected user with `X-User-ID`.
 - The backend resolves that user to a company. The client never chooses its own

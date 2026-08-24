@@ -10,8 +10,8 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import Settings
 from app.db import Base
 from app.identity import (
-    ALICE_ID,
-    BOB_ID,
+    DANA_ID,
+    DAVID_ID,
     HOSPITAL_A_ID,
     HOSPITAL_B_ID,
     CurrentUser,
@@ -53,8 +53,38 @@ def test_seed_is_idempotent_and_creates_the_fixed_hospital_users(
         assert session.scalar(select(func.count()).select_from(User)) == 2
         assert session.get(Company, HOSPITAL_A_ID).name == "Hospital A"
         assert session.get(Company, HOSPITAL_B_ID).name == "Hospital B"
-        assert session.get(User, ALICE_ID).display_name == "Alice"
-        assert session.get(User, BOB_ID).display_name == "Bob"
+        assert session.get(User, DANA_ID).display_name == "Dana"
+        assert session.get(User, DAVID_ID).display_name == "David"
+
+
+def test_seed_updates_legacy_display_names_without_changing_ownership(
+    session_factory: sessionmaker[Session],
+) -> None:
+    with session_factory() as session:
+        session.add_all(
+            [
+                Company(id=HOSPITAL_A_ID, name="Hospital A"),
+                Company(id=HOSPITAL_B_ID, name="Hospital B"),
+            ]
+        )
+        session.flush()
+        session.add_all(
+            [
+                User(id=DANA_ID, display_name="Alice", company_id=HOSPITAL_A_ID),
+                User(id=DAVID_ID, display_name="Bob", company_id=HOSPITAL_B_ID),
+            ]
+        )
+        session.commit()
+
+    with session_factory() as session:
+        seed_development_identities(session)
+        session.commit()
+
+        assert session.scalar(select(func.count()).select_from(User)) == 2
+        assert session.get(User, DANA_ID).display_name == "Dana"
+        assert session.get(User, DANA_ID).company_id == HOSPITAL_A_ID
+        assert session.get(User, DAVID_ID).display_name == "David"
+        assert session.get(User, DAVID_ID).company_id == HOSPITAL_B_ID
 
 
 def _make_identity_client(session_factory: sessionmaker[Session]) -> TestClient:
@@ -83,14 +113,14 @@ def test_header_resolves_company_only_from_the_seeded_user(
         response = client.get(
             "/test/whoami",
             headers={
-                "X-User-ID": str(ALICE_ID),
+                "X-User-ID": str(DANA_ID),
                 "X-Company-ID": str(HOSPITAL_B_ID),
             },
         )
 
     assert response.status_code == 200
     assert response.json() == {
-        "user_id": str(ALICE_ID),
+        "user_id": str(DANA_ID),
         "company_id": str(HOSPITAL_A_ID),
         "company_name": "Hospital A",
     }

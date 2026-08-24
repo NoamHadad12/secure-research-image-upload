@@ -73,7 +73,7 @@
       "title": "Seed development identities and resolve current user",
       "dependsOn": ["R04"],
       "acceptanceCriteria": [
-        "Hospital A, Hospital B, Alice, and Bob are seeded idempotently",
+        "Hospital A, Hospital B, and two fixed development identities are seeded idempotently",
         "X-User-ID resolves to a database user and company server-side",
         "Missing or unknown development users are rejected",
         "Client-provided company identity is never trusted"
@@ -234,7 +234,7 @@
       "dependsOn": ["R03", "R05", "R12"],
       "acceptanceCriteria": [
         "Typed API wrapper consistently sends selected X-User-ID",
-        "UI switches clearly between Alice and Bob",
+        "UI switches clearly between the two seeded development users",
         "User switch refreshes records and clears stale tenant data",
         "Backend remains the authorization authority"
       ],
@@ -340,6 +340,23 @@
       ],
       "checks": ["Frontend production build passes", "Backend regression suite passes", "Polling and favicon behavior are verified in a real browser"],
       "commitMessage": "fix: stabilize upload polling and browser feedback",
+      "passes": true,
+      "blocked": false
+    },
+    {
+      "id": "R22",
+      "priority": 22,
+      "title": "Polish the frontend and rename development identities",
+      "dependsOn": ["R21"],
+      "acceptanceCriteria": [
+        "The interface has a restrained responsive visual hierarchy without changing the upload flow",
+        "The development-user switch clearly explains the tenant-isolation demonstration",
+        "Dana remains mapped to Hospital A and David remains mapped to Hospital B using the existing stable IDs",
+        "Existing local databases adopt the new display names without adding users or changing company ownership",
+        "Accessible loading, empty, feedback, switching, upload, and download behavior remains intact"
+      ],
+      "checks": ["Frontend production build passes", "Backend identity and regression tests pass", "Responsive user-switch and tenant isolation behavior are verified in a real browser"],
+      "commitMessage": "style: polish the research upload interface",
       "passes": true,
       "blocked": false
     }

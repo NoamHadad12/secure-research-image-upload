@@ -1,17 +1,18 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import { ApiError, createApiClient } from "./api";
+import "./App.css";
 import type { DevelopmentUser, UploadRecord } from "./types";
 
 const developmentUsers: readonly DevelopmentUser[] = [
   {
     id: "00000000-0000-0000-0000-0000000000a2",
-    name: "Alice",
+    name: "Dana",
     companyName: "Hospital A",
   },
   {
     id: "00000000-0000-0000-0000-0000000000b2",
-    name: "Bob",
+    name: "David",
     companyName: "Hospital B",
   },
 ];
@@ -54,6 +55,10 @@ function formatCreatedAt(value: string): string {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(createdAt);
+}
+
+function formatStatus(value: string): string {
+  return value.split("_").join(" ");
 }
 
 export function App() {
@@ -243,45 +248,100 @@ export function App() {
   }
 
   return (
-    <main>
-      <h1>Secure Research Image Uploads</h1>
-      <p>
-        Development identity: <strong>{selectedUser.name}</strong> ({selectedUser.companyName})
-      </p>
+    <main className="app-shell">
+      <header className="hero">
+        <div className="brand-mark" aria-hidden="true">SR</div>
+        <div className="hero__copy">
+          <p className="eyebrow">Private research storage</p>
+          <h1>Secure Research Image Uploads</h1>
+          <p className="hero__description">
+            Upload research images directly to private storage while the server keeps each
+            hospital&apos;s records isolated.
+          </p>
+          <ul className="security-points" aria-label="Security characteristics">
+            <li>Private bucket</li>
+            <li>Server-authorized</li>
+            <li>Short-lived links</li>
+          </ul>
+        </div>
+        <div className="active-identity" aria-label="Current development identity">
+          <span className="active-identity__dot" aria-hidden="true" />
+          <span>
+            <small>Active workspace</small>
+            <strong>{selectedUser.name}</strong>
+            <span>{selectedUser.companyName}</span>
+          </span>
+        </div>
+      </header>
 
-      <fieldset disabled={userSwitchDisabled}>
-        <legend>Switch development user</legend>
-        {developmentUsers.map((user) => (
-          <label key={user.id}>
-            <input
-              checked={selectedUser.id === user.id}
-              name="development-user"
-              onChange={() => selectUser(user)}
-              type="radio"
-              value={user.id}
-            />
-            {user.name} — {user.companyName}
-          </label>
-        ))}
-      </fieldset>
-
-      <section aria-labelledby="upload-heading">
-        <h2 id="upload-heading">Upload an image</h2>
-        <form onSubmit={submitUpload}>
+      <section className="identity-panel" aria-labelledby="identity-heading">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Tenant isolation demo</p>
+            <h2 id="identity-heading">Choose a development identity</h2>
+          </div>
           <p>
-            <label>
-              Sample ID
+            Switch hospitals to verify that each identity sees only its own company&apos;s uploads.
+            Previous records are cleared before the next workspace loads.
+          </p>
+        </div>
+
+        <fieldset className="identity-switch" disabled={userSwitchDisabled}>
+          <legend className="visually-hidden">Switch development user</legend>
+          {developmentUsers.map((user) => {
+            const isSelected = selectedUser.id === user.id;
+            return (
+              <label className="identity-option" key={user.id}>
+                <input
+                  checked={isSelected}
+                  className="identity-option__input"
+                  name="development-user"
+                  onChange={() => selectUser(user)}
+                  type="radio"
+                  value={user.id}
+                />
+                <span className="identity-option__content">
+                  <span className="identity-option__avatar" aria-hidden="true">
+                    {user.name === "Dana" ? "DA" : "DV"}
+                  </span>
+                  <span className="identity-option__label">
+                    <strong>{user.name}</strong>
+                    <small>{user.companyName}</small>
+                  </span>
+                  <span className="identity-option__status">
+                    {isSelected ? "Active" : "Switch"}
+                  </span>
+                </span>
+              </label>
+            );
+          })}
+        </fieldset>
+      </section>
+
+      <div className="workspace-grid">
+        <section className="panel upload-panel" aria-labelledby="upload-heading">
+          <div className="panel__heading">
+            <span className="step-number" aria-hidden="true">1</span>
+            <div>
+              <p className="eyebrow">New research asset</p>
+              <h2 id="upload-heading">Upload an image</h2>
+            </div>
+          </div>
+
+          <form className="upload-form" onSubmit={submitUpload}>
+            <label className="field">
+              <span>Sample ID</span>
               <input
                 disabled={uploadInProgress}
                 onChange={(event) => setSampleId(event.target.value)}
+                placeholder="e.g. study-2026-014"
                 required
                 value={sampleId}
               />
             </label>
-          </p>
-          <p>
-            <label>
-              Classification
+
+            <label className="field">
+              <span>Classification</span>
               <select
                 disabled={uploadInProgress}
                 onChange={(event) =>
@@ -296,10 +356,9 @@ export function App() {
                 ))}
               </select>
             </label>
-          </p>
-          <p>
-            <label>
-              Image file
+
+            <label className="field field--file">
+              <span>Image file</span>
               <input
                 accept="image/png,image/jpeg,image/webp"
                 disabled={uploadInProgress}
@@ -308,92 +367,129 @@ export function App() {
                 required
                 type="file"
               />
+              <small>PNG, JPEG or WebP · maximum 10 MiB</small>
             </label>
-          </p>
-          <button disabled={uploadInProgress} type="submit">
-            {uploadInProgress ? "Uploading…" : "Upload image"}
-          </button>
-        </form>
 
-        <section aria-atomic="true" aria-live="polite">
-          {uploadState.kind === "initiating" && <p>Preparing a secure upload…</p>}
-          {uploadState.kind === "uploading" && <p>Uploading image directly to private storage…</p>}
-          {uploadState.kind === "confirming" && <p>Confirming the stored image…</p>}
-          {uploadState.kind === "success" && (
-            <p>Image uploaded and confirmed. Current status: {uploadState.status}.</p>
-          )}
-          {uploadState.kind === "error" && <p role="alert">{uploadState.message}</p>}
-        </section>
-      </section>
+            <button className="primary-button" disabled={uploadInProgress} type="submit">
+              {uploadInProgress ? "Uploading…" : "Upload image"}
+            </button>
+          </form>
 
-      <section
-        aria-busy={recordLoadState.kind === "loading"}
-        aria-labelledby="records-heading"
-      >
-        <h2 id="records-heading">Accessible uploads</h2>
-        <button disabled={recordLoadState.kind === "loading"} onClick={() => refreshRecords()} type="button">
-          Refresh records
-        </button>
-
-        <section aria-atomic="true" aria-live="polite">
-          {recordLoadState.kind === "loading" && <p>Refreshing accessible upload records…</p>}
-          {recordLoadState.kind === "error" && (
-            <p role="alert">Could not refresh accessible records: {recordLoadState.message}</p>
-          )}
-          {recordLoadState.kind === "ready" && records.length === 0 && (
-            <p>No uploads are accessible for this development user.</p>
-          )}
-          {backgroundRefreshError !== null && <p role="alert">{backgroundRefreshError}</p>}
+          <section className="feedback" aria-atomic="true" aria-live="polite">
+            {uploadState.kind === "initiating" && <p>Preparing a secure upload…</p>}
+            {uploadState.kind === "uploading" && <p>Uploading image directly to private storage…</p>}
+            {uploadState.kind === "confirming" && <p>Confirming the stored image…</p>}
+            {uploadState.kind === "success" && (
+              <p className="feedback--success">
+                Image uploaded and confirmed. Current status: {formatStatus(uploadState.status)}.
+              </p>
+            )}
+            {uploadState.kind === "error" && <p className="feedback--error" role="alert">{uploadState.message}</p>}
+          </section>
         </section>
 
-        {records.length > 0 && (
-          <ul aria-label="Accessible upload records">
-            {records.map((record) => (
-              <li key={record.upload_id}>
-                <h3>{record.filename}</h3>
-                <dl>
-                  <div>
-                    <dt>Sample ID</dt>
-                    <dd>{record.sample_id}</dd>
-                  </div>
-                  <div>
-                    <dt>Classification</dt>
-                    <dd>{record.classification}</dd>
-                  </div>
-                  <div>
-                    <dt>Status</dt>
-                    <dd>{record.status}</dd>
-                  </div>
-                  <div>
-                    <dt>Created</dt>
-                    <dd>
-                      <time dateTime={record.created_at}>{formatCreatedAt(record.created_at)}</time>
-                    </dd>
-                  </div>
-                </dl>
-                <button
-                  disabled={downloadInProgress || record.status === "pending_upload"}
-                  onClick={() => void downloadUpload(record)}
-                  type="button"
-                >
-                  {downloadState.kind === "requesting" &&
-                  downloadState.uploadId === record.upload_id
-                    ? "Preparing download…"
-                    : "Download"}
-                </button>
-                {record.status === "pending_upload" && (
-                  <p>Download is available after the image is confirmed.</p>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
+        <section
+          className="panel records-panel"
+          aria-busy={recordLoadState.kind === "loading"}
+          aria-labelledby="records-heading"
+        >
+          <div className="records-header">
+            <div className="panel__heading">
+              <span className="step-number" aria-hidden="true">2</span>
+              <div>
+                <p className="eyebrow">{selectedUser.companyName} workspace</p>
+                <h2 id="records-heading">Accessible uploads</h2>
+              </div>
+            </div>
+            <div className="records-header__actions">
+              {recordLoadState.kind === "ready" && (
+                <span className="record-count">{records.length} {records.length === 1 ? "upload" : "uploads"}</span>
+              )}
+              <button
+                className="secondary-button"
+                disabled={recordLoadState.kind === "loading"}
+                onClick={() => refreshRecords()}
+                type="button"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
 
-        <section aria-atomic="true" aria-live="polite">
-          {downloadState.kind === "success" && <p>Download started for {downloadState.filename}.</p>}
-          {downloadState.kind === "error" && <p role="alert">{downloadState.message}</p>}
+          <section className="feedback" aria-atomic="true" aria-live="polite">
+            {recordLoadState.kind === "loading" && <p>Refreshing accessible upload records…</p>}
+            {recordLoadState.kind === "error" && (
+              <p className="feedback--error" role="alert">
+                Could not refresh accessible records: {recordLoadState.message}
+              </p>
+            )}
+            {recordLoadState.kind === "ready" && records.length === 0 && (
+              <div className="empty-state">
+                <span aria-hidden="true">✓</span>
+                <h3>No accessible uploads</h3>
+                <p>{selectedUser.name} can see only uploads owned by {selectedUser.companyName}.</p>
+              </div>
+            )}
+            {backgroundRefreshError !== null && (
+              <p className="feedback--error" role="alert">{backgroundRefreshError}</p>
+            )}
+          </section>
+
+          {records.length > 0 && (
+            <ul className="record-list" aria-label="Accessible upload records">
+              {records.map((record) => (
+                <li className="record-card" key={record.upload_id}>
+                  <div className="record-card__topline">
+                    <h3 title={record.filename}>{record.filename}</h3>
+                    <span className={`status-pill status-pill--${record.status}`}>
+                      {formatStatus(record.status)}
+                    </span>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Sample ID</dt>
+                      <dd>{record.sample_id}</dd>
+                    </div>
+                    <div>
+                      <dt>Classification</dt>
+                      <dd>{record.classification}</dd>
+                    </div>
+                    <div>
+                      <dt>Created</dt>
+                      <dd>
+                        <time dateTime={record.created_at}>{formatCreatedAt(record.created_at)}</time>
+                      </dd>
+                    </div>
+                  </dl>
+                  <button
+                    className="secondary-button record-card__download"
+                    disabled={downloadInProgress || record.status === "pending_upload"}
+                    onClick={() => void downloadUpload(record)}
+                    type="button"
+                  >
+                    {downloadState.kind === "requesting" &&
+                    downloadState.uploadId === record.upload_id
+                      ? "Preparing…"
+                      : "Download"}
+                  </button>
+                  {record.status === "pending_upload" && (
+                    <p className="record-card__note">Download is available after confirmation.</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <section className="feedback" aria-atomic="true" aria-live="polite">
+            {downloadState.kind === "success" && (
+              <p className="feedback--success">Download started for {downloadState.filename}.</p>
+            )}
+            {downloadState.kind === "error" && (
+              <p className="feedback--error" role="alert">{downloadState.message}</p>
+            )}
+          </section>
         </section>
-      </section>
+      </div>
     </main>
   );
 }

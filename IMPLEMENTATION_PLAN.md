@@ -61,9 +61,16 @@ story state. Product implementation is in progress on the tracked `dev` branch.
   - Refresh processing statuses silently without flashing the blocking loading UI.
   - Serve an explicit local favicon so the browser console remains clean.
 
+## Phase 8 - Lightweight presentation polish
+
+- [x] R22: improve the frontend hierarchy and rename the development identities.
+  - Keep the existing upload and tenant-isolation behavior unchanged.
+  - Rename the stable Hospital A/B identities to Dana and David consistently.
+  - Keep the interface responsive, accessible, and intentionally lightweight.
+
 ## Global stop condition
 
-Ralph stops only when every R01-R21 story passes, all required automated checks
+Ralph stops only when every R01-R22 story passes, all required automated checks
 are green, the live cross-company scenario is verified, the README covers all 13
 requested topics, and a clean clone can be run from documented commands.
 

@@ -13,7 +13,7 @@ from sqlalchemy import create_engine
 
 from app.config import Settings
 from app.db import Base
-from app.identity import ALICE_ID, BOB_ID, HOSPITAL_A_ID, HOSPITAL_B_ID
+from app.identity import DANA_ID, DAVID_ID, HOSPITAL_A_ID, HOSPITAL_B_ID
 from app.main import create_app
 from app.models import Upload, UploadStatus
 
@@ -82,7 +82,7 @@ def _valid_metadata(**overrides: object) -> dict[str, object]:
 def _create_hospital_a_upload(client: TestClient) -> UUID:
     response = client.post(
         "/api/uploads/initiate",
-        headers={"X-User-ID": str(ALICE_ID)},
+        headers={"X-User-ID": str(DANA_ID)},
         json=_valid_metadata(),
     )
     assert response.status_code == 201
@@ -98,7 +98,7 @@ def test_assignment_requirement_hospital_a_can_create_and_access_its_own_upload(
         upload_id = _create_hospital_a_upload(client)
         response = client.get(
             f"/api/uploads/{upload_id}",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
         )
 
     assert response.status_code == 200
@@ -121,14 +121,14 @@ def test_assignment_requirement_hospital_b_is_denied_hospital_a_upload_access(
 
     with client:
         upload_id = _create_hospital_a_upload(client)
-        list_response = client.get("/api/uploads", headers={"X-User-ID": str(BOB_ID)})
+        list_response = client.get("/api/uploads", headers={"X-User-ID": str(DAVID_ID)})
         foreign_response = client.get(
             f"/api/uploads/{upload_id}",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
         absent_response = client.get(
             f"/api/uploads/{uuid4()}",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
 
     assert list_response.status_code == 200
@@ -154,7 +154,7 @@ def test_assignment_requirement_hospital_b_cannot_get_hospital_a_download_url(
 
         response = client.post(
             f"/api/uploads/{upload_id}/download-url",
-            headers={"X-User-ID": str(BOB_ID)},
+            headers={"X-User-ID": str(DAVID_ID)},
         )
 
     assert response.status_code == 404
@@ -184,7 +184,7 @@ def test_assignment_requirement_invalid_or_missing_metadata_is_rejected(
     with client:
         response = client.post(
             "/api/uploads/initiate",
-            headers={"X-User-ID": str(ALICE_ID)},
+            headers={"X-User-ID": str(DANA_ID)},
             json=metadata,
         )
 
