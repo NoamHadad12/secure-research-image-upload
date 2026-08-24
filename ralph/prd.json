@@ -208,7 +208,7 @@
       ],
       "checks": ["Owner download and cross-tenant denial tests pass"],
       "commitMessage": "feat: authorize short-lived presigned downloads",
-      "passes": false,
+      "passes": true,
       "blocked": false
     },
     {

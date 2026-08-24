@@ -20,6 +20,9 @@ class ObjectStorage(Protocol):
     def presigned_put_url(self, *, object_key: str, expires: timedelta) -> str:
         """Create a short-lived browser-reachable URL for one object PUT."""
 
+    def presigned_get_url(self, *, object_key: str, expires: timedelta) -> str:
+        """Create a short-lived browser-reachable URL for one authorized object GET."""
+
     def stat_object(self, *, object_key: str) -> "ObjectStat":
         """Read trusted object size and ETag after application authorization."""
 
@@ -53,7 +56,7 @@ class MinioBucketClient(Protocol):
 
 
 class MinioSigningClient(MinioBucketClient, Protocol):
-    """Subset of the public MinIO client used to sign browser PUT requests."""
+    """Subset of the public MinIO client used to sign browser object requests."""
 
     def presigned_put_object(
         self,
@@ -62,6 +65,14 @@ class MinioSigningClient(MinioBucketClient, Protocol):
         expires: timedelta,
     ) -> str:
         """Create a presigned PUT URL for an object in a private bucket."""
+
+    def presigned_get_object(
+        self,
+        bucket_name: str,
+        object_name: str,
+        expires: timedelta,
+    ) -> str:
+        """Create a presigned GET URL for an object in a private bucket."""
 
 
 class MinioObjectStatClient(MinioBucketClient, Protocol):
@@ -143,6 +154,15 @@ class MinioStorage:
         """Sign a PUT against the browser-reachable MinIO endpoint without rewriting it."""
 
         return self.public_signing_client.presigned_put_object(
+            self.bucket_name,
+            object_key,
+            expires=expires,
+        )
+
+    def presigned_get_url(self, *, object_key: str, expires: timedelta) -> str:
+        """Sign a GET against the browser-reachable MinIO endpoint without rewriting it."""
+
+        return self.public_signing_client.presigned_get_object(
             self.bucket_name,
             object_key,
             expires=expires,

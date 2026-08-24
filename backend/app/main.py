@@ -17,6 +17,7 @@ from app.identity import CurrentUser, get_current_user, seed_development_identit
 from app.models import Upload, UploadStatus
 from app.processing import process_confirmed_upload
 from app.schemas import (
+    DownloadUrlResponse,
     HealthResponse,
     UploadConfirmationResponse,
     UploadInitiationResponse,
@@ -27,6 +28,7 @@ from app.upload_metadata import UploadInitiationMetadata, build_object_key
 from app.upload_repository import add_upload, get_upload_for_company, list_uploads_for_company
 
 PRESIGNED_UPLOAD_URL_EXPIRY = timedelta(minutes=5)
+PRESIGNED_DOWNLOAD_URL_EXPIRY = timedelta(minutes=1)
 
 
 def get_object_storage(request: Request) -> ObjectStorage:
@@ -310,6 +312,42 @@ def create_app(
             classification=upload.classification,
             status=upload.status.value,
             created_at=upload.created_at,
+        )
+
+    @app.post(
+        "/api/uploads/{upload_id}/download-url",
+        response_model=DownloadUrlResponse,
+        tags=["uploads"],
+    )
+    def create_download_url(
+        upload_id: UUID,
+        current_user: CurrentUser = Depends(get_current_user),
+        session: Session = Depends(get_db_session),
+        storage: ObjectStorage = Depends(get_object_storage),
+    ) -> DownloadUrlResponse:
+        """Authorize an owned, confirmed upload before signing a one-minute GET URL."""
+
+        upload = get_upload_for_company(
+            session,
+            upload_id=upload_id,
+            company_id=current_user.company_id,
+        )
+        if upload is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Upload not found")
+        if upload.status is UploadStatus.PENDING_UPLOAD:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Upload is not available for download",
+            )
+
+        download_url = storage.presigned_get_url(
+            object_key=upload.object_key,
+            expires=PRESIGNED_DOWNLOAD_URL_EXPIRY,
+        )
+        return DownloadUrlResponse(
+            upload_id=upload.id,
+            download_url=download_url,
+            download_url_expires_in_seconds=int(PRESIGNED_DOWNLOAD_URL_EXPIRY.total_seconds()),
         )
 
     return app

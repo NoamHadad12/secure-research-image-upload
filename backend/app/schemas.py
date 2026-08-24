@@ -34,3 +34,11 @@ class UploadRecordResponse(BaseModel):
     classification: str
     status: str
     created_at: datetime
+
+
+class DownloadUrlResponse(BaseModel):
+    """A short-lived GET capability for an upload the caller already owns."""
+
+    upload_id: UUID
+    download_url: str
+    download_url_expires_in_seconds: int

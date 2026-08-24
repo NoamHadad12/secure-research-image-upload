@@ -241,3 +241,19 @@ file records decisions and evidence that should survive a fresh context.
   `pytest` (45 passed), `ruff check .`, frontend `npm run build`, and healthy
   Compose services.
 - Next eligible story: R13.
+
+## 2026-08-24 - R13 authorized presigned download URLs
+
+- Added `POST /api/uploads/{upload_id}/download-url`. It resolves the current
+  user server-side and authorizes the upload with the same tenant-scoped query
+  used by detail retrieval before invoking any storage adapter method.
+- Only uploads beyond `pending_upload` can receive a URL. The public response
+  contains the upload ID, temporary GET URL, and a 60-second expiry; it never
+  exposes the object key or MinIO credentials.
+- The MinIO adapter now signs GET URLs with its browser-reachable client, never
+  by rewriting an internal signed URL.
+- Added owner, foreign/nonexistent equivalence, pending-record, and signing
+  client tests. Denied and pending requests prove no GET URL is signed.
+- Verified `docker compose up --build -d`, full backend `pytest` (49 passed),
+  `ruff check .`, frontend `npm run build`, and healthy Compose services.
+- Next eligible story: R14.
